@@ -1,0 +1,40 @@
+<resources>
+    <string name="app_name">Funkytunes</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
+    <string name="play_queue">Play Queue</string>
+    <string name="settings">Settings</string>
+    <string name="github_repository_title">Github Repository</string>
+    <string name="github_repository_summary">Go to the Github repository</string>
+    <string name="github_repository_url" translatable="false">https://github.com/funkyg/funkytunes</string>
+    <string name="gitlab_mirror_title">Gitlab Mirror</string>
+    <string name="gitlab_mirror_summary">Open Gitlab mirror</string>
+    <string name="gitlab_mirror_url" translatable="false">https://gitlab.com/funkydev/funkytunes</string>
+    <string name="version">Version</string>
+    <string name="search_title">Search Album…</string>
+    <string name="discogs_api_keys_missing" translatable="false">Discogs API key and secret are required for search</string>
+    <string name="notification_loading_title">Loading torrent…</string>
+    <string name="license">Your Acceptance\n\n
+By using the \'Funkytunes\' app you signify your agreement to (1) these terms and conditions (the \'Terms of Service\').\n\n
+Privacy Policy\n\n
+You understand that by using \' Funkytunes\' you may encounter material that you may deem to be offensive, indecent, or objectionable, and that such content may or may not be identified as having explicit material. \' Funkytunes\' will have no liability to you for such material – you agree that your use of \' Funkytunes\' is at your sole risk.\n\n
+DISCLAIMERS\n\n
+YOU EXPRESSLY AGREE THAT YOUR USE OF \' Funkytunes\' IS AT YOUR SOLE RISK. \' Funkytunes\' AND ALL PRODUCTS ARE PROVIDED TO YOU \'AS IS\' WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. \' Funkytunes\' MAKES ABSOLUTELY NO WARRANTIES WHATSOEVER, EXPRESS OR IMPLIED. TO THE FULLEST EXTENT POSSIBLE UNDER APPLICABLE LAWS, YIFY DISCLAIMS ALL WARRANTIES, EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, OR OTHER VIOLATIONS OF RIGHTS.\n\n
+LIMITATION OF LIABILITY\n\n
+\' Funkytunes\' IS NOT RESPONSIBLE FOR ANY PROBLEMS OR TECHNICAL MALFUNCTION OF ANY WEBSITE, NETWORK, COMPUTER SYSTEMS, SERVERS, PROVIDERS, COMPUTER EQUIPMENT, OR SOFTWARE, OR FOR ANY FAILURE DUE TO TECHNICAL PROBLEMS OR TRAFFIC CONGESTION ON THE INTERNET OR \' Funkytunes\' OR COMBINATION THEREOF, INCLUDING ANY INJURY OR DAMAGE TO USERS OR TO ANY COMPUTER OR OTHER DEVICE ON OR THROUGH WHICH \' Funkytunes\' IS PROVIDED. UNDER NO CIRCUMSTANCES WILL \' Funkytunes\' BE LIABLE FOR ANY LOSS OR DAMAGE, INCLUDING PERSONAL INJURY OR DEATH, RESULTING FROM YOUR USE OF \' Funkytunes\'.\n\nSOURCE MATERIAL\n\nALL SONGS ARE NOT HOSTED IN ANY SERVER AND ARE STREAMED USING THE P2P BIT TORRENT PROTOCOL. ALL SONGS ARE PULLED IN FROM THE OPEN PUBLIC APIS. BY STREAMING A SONG WITH THIS APPLICATION YOU MIGHT BE COMMITING COPYRIGHT VIOLATIONS DEPENDING ON YOUR COUNTRY\'S LAWS. WE DO NOT TAKE ANY RESPONSABILITIES.\n\n
+Ability to Accept Terms of Service\n\n
+By using \' Funkytunes\' or accessing this site you affirm that you are either more than 18 years of age, or an emancipated minor, or possess legal parental or guardian consent, and are fully able and competent to enter into the terms, conditions, obligations, affirmations, representations, and warranties set forth in these Terms of Service, and to abide by and comply with these Terms of Service. In any case, you affirm that you are over the age of 13, as the Service is not intended for children under 13. If you are under 13 years of age, then please do not use the Service. There are lots of other great web sites for you. Talk to your parents about what sites are appropriate for you.</string>
+    <string name="accept">Accept</string>
+    <string name="leave">Leave</string>
+    <string name="error_no_torrent_found">Error: No matching torrent found for album.</string>
+    <string name="error_torrent_invalid_files">Error: Torrent does not contain any mp3 files.</string>
+    <string name="update_available">Update Available</string>
+    <string name="download">Download</string>
+    <string name="github_repository_missing">Github Repository Missing</string>
+    <string name="github_update_url" translatable="false">https://github.com/funkyg/funkytunes/releases/latest</string>
+    <string name="magnet_download_timeout">Magnet download took too long</string>
+    <string name="loading_torrent">Loading torrent</string>
+    <string name="playlist_empty">Playlist is empty</string>
+</resources>
