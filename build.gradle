@@ -1,0 +1,20 @@
+buildscript {
+    ext.kotlin_version = '1.1.1'
+    ext.support_version = '25.3.1'
+    ext.build_tools_version = '2.3.1'
+    ext.jlibtorrent_version = '1.2.0.6'
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:$build_tools_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.13.0'
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+    }
+}

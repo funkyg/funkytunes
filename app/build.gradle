@@ -1,0 +1,43 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'com.github.ben-manes.versions'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+    dataBinding.enabled = true
+    defaultConfig {
+        applicationId "com.github.funkyg.funkytunes"
+        minSdkVersion 17
+        targetSdkVersion 25
+        versionCode 1
+        versionName "0.1.0"
+    }
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+}
+
+dependencies {
+    compile "com.android.support:appcompat-v7:$support_version"
+    compile "com.android.support:design:$support_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile 'com.github.salomonbrys.kotson:kotson:2.5.0'
+    kapt "com.android.databinding:compiler:$build_tools_version"
+    compile 'com.github.nitrico.lastadapter:lastadapter:2.2.0'
+    compile 'com.google.guava:guava:20.0'
+    compile 'com.github.bumptech.glide:glide:3.7.0'
+    compile 'org.jsoup:jsoup:1.10.2'
+    compile 'com.android.volley:volley:1.0.0'
+    compile "com.frostwire:jlibtorrent:$jlibtorrent_version"
+    compile "com.frostwire:jlibtorrent-android-arm:$jlibtorrent_version"
+    compile "com.frostwire:jlibtorrent-android-x86:$jlibtorrent_version"
+    compile 'com.google.dagger:dagger:2.10'
+    kapt 'com.google.dagger:dagger-compiler:2.10'
+}
+
+kapt.generateStubs = true
+
+repositories {
+    mavenCentral()
+}
