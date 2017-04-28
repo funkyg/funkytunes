@@ -25,6 +25,8 @@ class SearchHandler(val context: Context) {
 
     private val Tag = "SearchHandler"
     private val SEARCH_URL = Uri.parse("https://api.discogs.com/database/search")
+    private val DISCOGS_API_KEY = "VDgrHCFJOTSTdUMyvCAe"
+    private val DISCOGS_API_SECRET = "HXHPkmfJJnrcfYmYYfBXrdlRDLAVmmuA"
 
     @Inject lateinit var volleyQueue: RequestQueue
 
@@ -45,17 +47,11 @@ class SearchHandler(val context: Context) {
     }
 
     fun search(query: String, listener: (List<Album>) -> Unit) {
-        val keys = getApiKeys()
-        if (keys == null) {
-            Toast.makeText(context, R.string.discogs_api_keys_missing, Toast.LENGTH_LONG).show()
-            return
-        }
-
         val uri = SEARCH_URL.buildUpon()
                 .appendQueryParameter("q", query)
                 .appendQueryParameter("type", "release")
-                .appendQueryParameter("key", keys.getValue("DISCOGS_API_KEY"))
-                .appendQueryParameter("secret", keys.get("DISCOGS_API_SECRET"))
+                .appendQueryParameter("key", DISCOGS_API_KEY)
+                .appendQueryParameter("secret", DISCOGS_API_SECRET)
                 .build()
 
         val request = object : StringRequest(Method.GET, uri.toString(), Response.Listener<String> { reply ->
@@ -79,19 +75,5 @@ class SearchHandler(val context: Context) {
         // HACK: Discogs returns many duplicate releases, so we try to remove duplicates by filtering
         //       for unique artist and title.
         return items.distinctBy { x -> x.artist + x.title }
-    }
-
-    private fun getApiKeys(): Map<String, String>? {
-        try {
-            val keysResource = context.resources.assets.open("api_keys.txt")
-            val keys = CharStreams.toString(InputStreamReader(keysResource, Charsets.UTF_8))
-            keysResource.close()
-            return keys.split("\n")
-                    .map { k -> k.split("=") }
-                    .map { k -> k[0] to k[1] }
-                    .toMap()
-        } catch (e: IOException) {
-            return null
-        }
     }
 }

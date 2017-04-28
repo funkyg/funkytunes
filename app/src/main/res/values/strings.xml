@@ -14,7 +14,6 @@
     <string name="gitlab_mirror_url" translatable="false">https://gitlab.com/funkydev/funkytunes</string>
     <string name="version">Version</string>
     <string name="search_title">Search Album…</string>
-    <string name="discogs_api_keys_missing" translatable="false">Discogs API key and secret are required for search</string>
     <string name="notification_loading_title">Loading torrent…</string>
     <string name="license">Your Acceptance\n\n
 By using the \'Funkytunes\' app you signify your agreement to (1) these terms and conditions (the \'Terms of Service\').\n\n
