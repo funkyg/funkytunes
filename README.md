@@ -28,16 +28,6 @@ as its ready. Additional songs are downloaded on demand.
 Funkytunes uses a standard Android build. Just install Android Studio and
 Android SDK, import the project, and that's it!
 
-For search, you need to register a
-[Discogs account](https://www.discogs.com/developers/#page:authentication,header:authentication-discogs-auth-flow)
-and enter the consumer key and consumer secret in
-`app/src/main/assets/api_keys.txt` in the following form:
-
-```
-DISCOGS_API_KEY=your_key
-DISCOGS_API_SECRET=your_secret
-```
-
 # License
 
 Funkytunes is licensed under [GPLv3](LICENSE)
