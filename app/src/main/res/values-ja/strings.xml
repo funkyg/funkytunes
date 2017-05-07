@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">Funkytunes</string>
+    <string name="play">再生</string>
+    <string name="pause">一時停止</string>
+    <string name="previous">前へ</string>
+    <string name="next">次へ</string>
+    <string name="play_queue">キューの再生</string>
+    <string name="settings">設定</string>
+    <string name="github_repository_title">Github リポジトリ</string>
+    <string name="github_repository_summary">Github リポジトリに移動します</string>
+
+    <string name="gitlab_mirror_title">Gitlab ミラー</string>
+    <string name="gitlab_mirror_summary">Gitlab ミラーを開く</string>
+
+    <string name="version">バージョン</string>
+    <string name="search_title">アルバムを検索…</string>
+    <string name="notification_loading_title">torrent のロード中…</string>
+    <string name="license">同意事項\n\n
+\' Funkytunes\' アプリを使用することにより、これらの規約と条件 (\'利用規約\') (1) に同意することを意味します。\n\n
+プライバシーポリシー\n\n
+\' Funkytunes\' を使用することによって、あなたは不快、気まずい、または好ましくないと思われるコンテンツに遭遇する可能性があること、およびそのようなコンテンツが明示的に素材を有すると特定することができないことを理解します。 \' Funkytunes\' はそのような素材に対して責任を負いません - \' Funkytunes\' の使用があなた自身のリスクに基づくことに同意します。\n\n
+免責事項\n\n
+あなた自身の責任において \' Funkytunes\' を使用することに、あなたは明示的に同意します。 \' Funkytunes\' およびすべての製品は \'あるがまま\' に提供され、明示的にも暗黙的にも、いかなる種類の保証もありません。 \' Funkytunes\' は、明示的か暗示的かを問わず、いかなる保証もありません。 商用可能性、特定の目的への適合性、権利侵害、その他の権利侵害の黙示的な保証を含め、明示的にも黙示的にも、すべての保証は否認されますが、これに限定されるものではありません。\n\n
+責任の制限\n\n
+\' Funkytunes\' は、\' Funkytunes\' が提供されている間の、ウェブサイト、ネットワーク、コンピュータシステム、サーバー、プロバイダ、コンピュータ機器、ソフトウェアなどの問題や技術的不具合、または技術的問題やインターネット、\'Funkytunes \' またはその組み合わせ上の通信混雑に起因する不具合を、ユーザーまたはコンピュータまたはその他のデバイスへの損害または損傷を含み、責任を負いません。 いかなる状況においても、\' Funkytunes\'は、\' Funkytunes\' の使用に起因する個人の損害または損傷を含む、いかなる損失または損害に対しても責任を負わないものとします。\n\n
+ソースの素材\n\n
+すべての曲はいかなるサーバーにもホストされておらず、P2P BIT TORRENT プロトコルを使用してストリーミングされています。 すべての曲は、オープンな公開 API から運ばれます。 このアプリケーションで曲をストリーミングすることは、あなたの国の法律に基づいて著作権侵害を引き起こすことがあります。 私たちはいかなる責任も負いません。\n\n
+利用規約に同意する能力\n\n
+\' Funkytunes\' を使用するか、このサイトにアクセスすることにより、あなたは 18 歳以上、または独立した未成年者であること、または法的な親または保護者の同意を得ていることを確認し、これらの利用規約の規約、条件 、義務、誓約、表明、および保証することが可能で、能力があり、これらの利用規約を遵守するものとします。 いずれにせよ、13 歳未満の子供向けのサービスではないので、13 歳以上であることを確認してください。あなたが 13 歳未満の場合は、このサービスを使用しないでください。 あなた向けに他のすばらしいウェブサイトがたくさんあります。 適切なサイトについてご両親に相談してください。</string>
+    <string name="accept">同意</string>
+    <string name="leave">やめる</string>
+    <string name="error_no_torrent_found">エラー: アルバムに一致する torrent が見つかりません。</string>
+    <string name="error_torrent_invalid_files">エラー: Torrent に mp3 ファイルが含まれていません。</string>
+    <string name="magnet_download_timeout">Magnet ダウンロードに長時間かかり過ぎました</string>
+    <string name="loading_torrent">torrent のロード中</string>
+    <string name="playlist_empty">プレイリストは空です</string>
+</resources>
