@@ -24,10 +24,10 @@ import kotlin.collections.ArrayList
 class PirateBayAdapter(context: Context) {
 
     private val Tag = "PirateBayAdapter"
-    private val DOMAIN = "https://theproxypirate.pw"
+    private val DOMAINS = arrayOf("https://pirateproxy.cc", "https://pirateportal.xyz", "https://thepiratebay.org")
     private val SORT_SEEDS = "7"
     private val CATEGORY_MUSIC = "101"
-    private val QUERYURL = "$DOMAIN/search/%1\$s/0/$SORT_SEEDS/$CATEGORY_MUSIC"
+    private val QUERYURL = "/search/%1\$s/0/$SORT_SEEDS/$CATEGORY_MUSIC"
 
     @Inject lateinit var volleyQueue: RequestQueue
 
@@ -39,34 +39,42 @@ class PirateBayAdapter(context: Context) {
                        val size: String, val added: Date?, val seeds: Int, val leechers: Int)
 
     fun search(album: Album, listener: (String) -> Unit, errorListener: (Int) -> Unit) {
+		search_mirror(0, album, listener, errorListener)
+	}
+
+    fun search_mirror(retry: Int, album: Album, listener: (String) -> Unit, errorListener: (Int) -> Unit) {
         // Exclude additions like "(Original Motion Picture Soundtrack)" or "(Deluxe Edition)" from
         // the query.
         val name = album.title.split('(', '[', limit = 2)[0]
         val query = album.artist + " " + name
-        // Build full URL string
-        val url = String.format(QUERYURL, URLEncoder.encode(query, "UTF-8"))
+		if(retry < DOMAINS.size) {
+			val domain = DOMAINS[retry]
+			// Build full URL string
+			val url = String.format(domain + QUERYURL, URLEncoder.encode(query, "UTF-8"))
+			Log.i(Tag, "Trying URL: " + url)
 
-        val request = object : StringRequest(Method.GET, url, Response.Listener<String> { reply ->
-            val parsedResults = parseHtml(reply)
-            when (parsedResults.isEmpty()) {
-                false -> listener(parsedResults.first().torrentUrl)
-                true  -> errorListener(R.string.error_no_torrent_found)
-            }
-        }, Response.ErrorListener { error ->
-            Log.w(Tag, error)
-        }) {
-            override fun getHeaders(): MutableMap<String, String> {
-                val headers = HashMap<String, String>()
-                // Spoof Firefox user agent to force a result from The Pirate Bay
-                headers.put("User-agent", "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2")
-                return headers
-            }
-        }
+			val request = object : StringRequest(Method.GET, url, Response.Listener<String> { reply ->
+				val parsedResults = parseHtml(reply, domain)
+				when (parsedResults.isEmpty()) {
+					false -> listener(parsedResults.first().torrentUrl)
+					true  -> errorListener(R.string.error_no_torrent_found)
+				}
+			}, Response.ErrorListener { error ->
+				search_mirror(retry + 1, album, listener, errorListener)
+			}) {
+				override fun getHeaders(): MutableMap<String, String> {
+					val headers = HashMap<String, String>()
+					// Spoof Firefox user agent to force a result from The Pirate Bay
+					headers.put("User-agent", "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2")
+					return headers
+				}
+			}
 
-        volleyQueue.add(request)
+			volleyQueue.add(request)
+		}
     }
 
-    private fun parseHtml(html: String): List<SearchResult> {
+    private fun parseHtml(html: String, prefixDetails: String): List<SearchResult> {
         // Texts to find subsequently
         val RESULTS = "<table id=\"searchResult\">"
         val TORRENT = "<div class=\"detName\">"
@@ -79,16 +87,16 @@ class PirateBayAdapter(context: Context) {
         while (torStart >= 0) {
             val nextTorrentIndex = html.indexOf(TORRENT, torStart + TORRENT.length)
             if (nextTorrentIndex >= 0) {
-                results.add(parseHtmlItem(html.substring(torStart + TORRENT.length, nextTorrentIndex)))
+                results.add(parseHtmlItem(html.substring(torStart + TORRENT.length, nextTorrentIndex), prefixDetails))
             } else {
-                results.add(parseHtmlItem(html.substring(torStart + TORRENT.length)))
+                results.add(parseHtmlItem(html.substring(torStart + TORRENT.length), prefixDetails))
             }
             torStart = nextTorrentIndex
         }
         return results
     }
 
-    private fun parseHtmlItem(htmlItem: String): SearchResult {
+    private fun parseHtmlItem(htmlItem: String, prefixDetails: String): SearchResult {
         // Texts to find subsequently
         val DETAILS = "<a href=\""
         val DETAILS_END = "\" class=\"detLink\""
@@ -104,7 +112,6 @@ class PirateBayAdapter(context: Context) {
         val SEEDERS_END = "</td>"
         val LEECHERS = "<td align=\"right\">"
         val LEECHERS_END = "</td>"
-        val prefixDetails = DOMAIN
         val prefixYear = (Date().year + 1900).toString() + " " // Date.getYear() gives the current year - 1900
         val df1 = SimpleDateFormat("yyyy MM-dd HH:mm", Locale.US)
         val df2 = SimpleDateFormat("MM-dd yyyy", Locale.US)
