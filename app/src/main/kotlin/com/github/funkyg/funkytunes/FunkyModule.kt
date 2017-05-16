@@ -4,6 +4,7 @@ import android.support.v4.app.NotificationManagerCompat
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
 import com.github.funkyg.funkytunes.network.*
+import com.github.funkyg.funkytunes.service.NotificationHandler
 import com.github.funkyg.funkytunes.service.TorrentManager
 import dagger.Module
 import dagger.Provides
@@ -26,6 +27,9 @@ class FunkyModule(private val app: FunkyApplication) {
 
     @Provides
     fun getChartsFetcher() = ChartsFetcher(app)
+
+    @Provides
+    fun getUpdateChecker() = UpdateChecker(app)
 
     @Provides
     fun getSearchHandler() = SearchHandler(app)

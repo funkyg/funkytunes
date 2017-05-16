@@ -1,7 +1,9 @@
 package com.github.funkyg.funkytunes.activities
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.databinding.DataBindingUtil
+import android.net.Uri
 import android.os.Bundle
 import android.support.v4.view.MenuItemCompat
 import android.support.v7.widget.LinearLayoutManager
@@ -16,6 +18,7 @@ import com.github.funkyg.funkytunes.R
 import com.github.funkyg.funkytunes.databinding.ActivityMainBinding
 import com.github.funkyg.funkytunes.databinding.ItemMainBinding
 import com.github.funkyg.funkytunes.network.ChartsFetcher
+import com.github.funkyg.funkytunes.network.UpdateChecker
 import com.github.funkyg.funkytunes.network.SearchHandler
 import com.github.nitrico.lastadapter.Holder
 import com.github.nitrico.lastadapter.ItemType
@@ -25,6 +28,7 @@ import javax.inject.Inject
 class MainActivity : BaseActivity(), SearchView.OnQueryTextListener {
 
     @Inject lateinit var chartsFetcher: ChartsFetcher
+    @Inject lateinit var updateChecker: UpdateChecker
     @Inject lateinit var searchHandler: SearchHandler
     private lateinit var binding: ActivityMainBinding
 
@@ -36,6 +40,7 @@ class MainActivity : BaseActivity(), SearchView.OnQueryTextListener {
         binding.recycler.layoutManager = LinearLayoutManager(this)
 
         chartsFetcher.fetchAppleAlbumFeed { f -> showAlbums(f) }
+        checkUpdates()
     }
 
     override fun onServiceConnected() {
@@ -56,6 +61,7 @@ class MainActivity : BaseActivity(), SearchView.OnQueryTextListener {
                 .into(binding.recycler)
         binding.recycler.visibility = View.VISIBLE
         binding.progress.visibility = View.GONE
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -99,5 +105,31 @@ class MainActivity : BaseActivity(), SearchView.OnQueryTextListener {
             SearchHandler(this).search(newText, { a -> showAlbums(a)})
         }
         return true
+    }
+
+    private fun checkUpdates() {
+        updateChecker.checkUpdate(object : UpdateChecker.UpdateListener {
+            override fun updateAvailable() {
+                AlertDialog.Builder(this@MainActivity)
+                        .setMessage(R.string.update_available)
+                        .setPositiveButton(R.string.download, { _, _ ->
+                            val uri = Uri.parse(getString(R.string.github_update_url))
+                            startActivity(Intent(Intent.ACTION_VIEW, uri))
+                        })
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show()
+            }
+
+            override fun repoNotFound() {
+                AlertDialog.Builder(this@MainActivity)
+                        .setMessage(R.string.github_repository_missing)
+                        .setPositiveButton(R.string.gitlab_mirror_summary, { _, _ ->
+                            val uri = Uri.parse(getString(R.string.gitlab_mirror_url))
+                            startActivity(Intent(Intent.ACTION_VIEW, uri))
+                        })
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show()
+            }
+        })
     }
 }

@@ -29,6 +29,10 @@ By using \' Funkytunes\' or accessing this site you affirm that you are either m
     <string name="leave">Leave</string>
     <string name="error_no_torrent_found">Error: No matching torrent found for album.</string>
     <string name="error_torrent_invalid_files">Error: Torrent does not contain any mp3 files.</string>
+    <string name="update_available">Update Available</string>
+    <string name="download">Download</string>
+    <string name="github_repository_missing">Github Repository Missing</string>
+    <string name="github_update_url" translatable="false">https://github.com/funkyg/funkytunes/releases/latest</string>
     <string name="magnet_download_timeout">Magnet download took too long</string>
     <string name="loading_torrent">Loading torrent</string>
     <string name="playlist_empty">Playlist is empty</string>
