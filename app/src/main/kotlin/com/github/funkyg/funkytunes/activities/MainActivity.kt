@@ -18,8 +18,8 @@ import com.github.funkyg.funkytunes.R
 import com.github.funkyg.funkytunes.databinding.ActivityMainBinding
 import com.github.funkyg.funkytunes.databinding.ItemMainBinding
 import com.github.funkyg.funkytunes.network.ChartsFetcher
-import com.github.funkyg.funkytunes.network.UpdateChecker
 import com.github.funkyg.funkytunes.network.SearchHandler
+import com.github.funkyg.funkytunes.network.UpdateChecker
 import com.github.nitrico.lastadapter.Holder
 import com.github.nitrico.lastadapter.ItemType
 import com.github.nitrico.lastadapter.LastAdapter
@@ -31,6 +31,7 @@ class MainActivity : BaseActivity(), SearchView.OnQueryTextListener {
     @Inject lateinit var updateChecker: UpdateChecker
     @Inject lateinit var searchHandler: SearchHandler
     private lateinit var binding: ActivityMainBinding
+    private var searchView: SearchView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,9 +69,9 @@ class MainActivity : BaseActivity(), SearchView.OnQueryTextListener {
         super.onCreateOptionsMenu(menu)
         menuInflater.inflate(R.menu.activity_main, menu)
         val searchItem = menu!!.findItem(R.id.search)
-        val sv = MenuItemCompat.getActionView(searchItem) as SearchView
-        sv.queryHint = getString(R.string.search_title)
-        sv.setOnQueryTextListener(this)
+        searchView = MenuItemCompat.getActionView(searchItem) as SearchView
+        searchView!!.queryHint = getString(R.string.search_title)
+        searchView!!.setOnQueryTextListener(this)
         MenuItemCompat.setOnActionExpandListener(searchItem, object : MenuItemCompat.OnActionExpandListener {
             override fun onMenuItemActionExpand(menuItem: MenuItem): Boolean {
                 return true
@@ -102,7 +103,15 @@ class MainActivity : BaseActivity(), SearchView.OnQueryTextListener {
 
     override fun onQueryTextChange(newText: String): Boolean {
         if (!newText.isEmpty()) {
-            SearchHandler(this).search(newText, { a -> showAlbums(a)})
+            SearchHandler(this).search(newText, { a ->
+                // Dont show outdated results if the query has already changed in between
+                if (newText != searchView?.query.toString()) {
+                    showAlbums(a)
+                }
+            })
+        }
+        else {
+            chartsFetcher.fetchAppleAlbumFeed { f -> showAlbums(f) }
         }
         return true
     }
