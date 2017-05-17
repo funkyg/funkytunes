@@ -6,7 +6,7 @@ Funkytunes is a BitTorrent-based music app for Android, like Spotify or
 Pandora. You can stream any music for free. The app is completely
 open-source.
 
-[![Download](get-it-on-fdroid.png)](https://f-droid.org/repository/browse/?fdfilter=funkytunes&fdid=com.github.funkyg.funkytunes)
+[![Download](download.png)](https://github.com/funkyg/funkytunes/releases/latest)
 
 [Gitlab Mirror](https://gitlab.com/funkydev/funkytunes)
 
