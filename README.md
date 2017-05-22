@@ -1,5 +1,7 @@
 # Funkytunes
 
+[![BuddyBuild](https://dashboard.buddybuild.com/api/statusImage?appID=5922904f63d69200012069fa&branch=master&build=latest)](https://dashboard.buddybuild.com/apps/5922904f63d69200012069fa/build/latest?branch=master)
+
 ![Screenshots](screenshots.png)
 
 Funkytunes is a BitTorrent-based music app for Android, like Spotify or
