@@ -99,7 +99,9 @@ class MainActivity : BaseActivity(), SearchView.OnQueryTextListener {
         }
     }
 
-    override fun onQueryTextSubmit(query: String) = true
+    override fun onQueryTextSubmit(query: String): Boolean {
+		return this.onQueryTextChange(query)
+	}
 
     override fun onQueryTextChange(newText: String): Boolean {
         if (!newText.isEmpty()) {
