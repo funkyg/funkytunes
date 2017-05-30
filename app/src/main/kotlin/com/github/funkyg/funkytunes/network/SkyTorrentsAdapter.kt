@@ -134,7 +134,7 @@ class SkyTorrentsAdapter(context: Context) {
         var size = htmlItem.substring(sizeStart, htmlItem.indexOf(SIZE_END, sizeStart))
         size = size.replace("&nbsp;", " ")
 
-        val numFilesStart = htmlItem.indexOf(NUMFILES, sizeLinkStart) + NUMFILES.length
+        val numFilesStart = htmlItem.indexOf(NUMFILES, sizeStart) + NUMFILES.length
         var numFiles = htmlItem.substring(numFilesStart, htmlItem.indexOf(NUMFILES_END, numFilesStart))
         numFiles = numFiles.replace("&nbsp;", " ")
 
