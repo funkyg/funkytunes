@@ -125,19 +125,26 @@ class TorrentManager(private val context: Context) : AlertListener {
             currentHash = null
         }
 
-        skyTorrentsAdapter.search(album, { magnet ->
+//        pirateBayAdapter.search(album, { magnet ->
+//            Thread({ ->
+//                val torrentBytes = sessionManager.fetchMagnet(magnet, MAGNET_TIMEOUT_SECONDS)
+//                if (torrentBytes != null) {
+//                    val tmp = createTempFile("funkytunes", ".torrent")
+//                    Files.write(torrentBytes, tmp)
+//                    val ti = TorrentInfo(tmp)
+//                    sessionManager.download(ti, context.filesDir)
+//                    tmp.delete()
+//                }
+//                else {
+//                    Log.w(Tag, "Fetching torrent from magnet timed out")
+//                    errorListener(R.string.magnet_download_timeout)
+//                }
+//            }).start()
+//        }, errorListener)
+        skyTorrentsAdapter.search(album, { torrentInfo ->
             Thread({ ->
-                val torrentBytes = sessionManager.fetchMagnet(magnet, MAGNET_TIMEOUT_SECONDS)
-                if (torrentBytes != null) {
-                    val tmp = createTempFile("funkytunes", ".torrent")
-                    Files.write(torrentBytes, tmp)
-                    val ti = TorrentInfo(tmp)
-                    sessionManager.download(ti, context.filesDir)
-                    tmp.delete()
-                }
-                else {
-                    Log.w(Tag, "Fetching torrent from magnet timed out")
-                    errorListener(R.string.magnet_download_timeout)
+                if (torrentInfo != null) {
+                    sessionManager.download(torrentInfo, context.filesDir)
                 }
             }).start()
         }, errorListener)

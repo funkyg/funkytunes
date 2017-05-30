@@ -2,12 +2,19 @@ package com.github.funkyg.funkytunes.network
 
 import android.content.Context
 import android.util.Log
+import com.android.volley.toolbox.HttpHeaderParser
+import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.Response
+import com.android.volley.NetworkResponse
+import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
+import com.frostwire.jlibtorrent.*
 import com.github.funkyg.funkytunes.Album
 import com.github.funkyg.funkytunes.FunkyApplication
 import com.github.funkyg.funkytunes.R
+import com.google.common.io.Files
+import java.io.IOException
 import java.net.URLEncoder
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -33,11 +40,11 @@ class SkyTorrentsAdapter(context: Context) {
     class SearchResult(val title: String, val torrentUrl: String, val detailsUrl: String,
                        val size: String, val added: Date?, val seeds: Int, val leechers: Int)
 
-    fun search(album: Album, listener: (String) -> Unit, errorListener: (Int) -> Unit) {
+    fun search(album: Album, listener: (TorrentInfo) -> Unit, errorListener: (Int) -> Unit) {
 		search_mirror(0, album, listener, errorListener)
 	}
 
-    fun search_mirror(retry: Int, album: Album, listener: (String) -> Unit, errorListener: (Int) -> Unit) {
+    fun search_mirror(retry: Int, album: Album, listener: (TorrentInfo) -> Unit, errorListener: (Int) -> Unit) {
         // Exclude additions like "(Original Motion Picture Soundtrack)" or "(Deluxe Edition)" from
         // the query.
         val name = album.title.split('(', '[', limit = 2)[0]
@@ -50,11 +57,61 @@ class SkyTorrentsAdapter(context: Context) {
 
 			val request = object : StringRequest(Method.GET, url, Response.Listener<String> { reply ->
 				val parsedResults = parseHtml(reply, domain)
-				when (parsedResults.isEmpty()) {
-					false -> listener(parsedResults.first().torrentUrl)
-					true  -> errorListener(R.string.error_no_torrent_found)
+				for (item in parsedResults) {
+					Log.i(Tag, "Trying torrent URL: " + item.torrentUrl)
+					val torrentRequest = object : Request<TorrentInfo>(Method.GET, item.torrentUrl, Response.ErrorListener { error ->
+						Log.i(Tag, "Volley error for URL: " + item.torrentUrl)
+					}){
+						override fun parseNetworkResponse(response: NetworkResponse) : Response<TorrentInfo> {
+							val bytes = response.data
+							if (bytes != null) {
+								val tmp = createTempFile("funkytunes", ".torrent")
+								Files.write(bytes, tmp)
+								try {
+									val ti = TorrentInfo(tmp)
+
+									return Response.success(ti, HttpHeaderParser.parseCacheHeaders(response))
+								} catch (e: IllegalArgumentException) {
+									return Response.error(VolleyError("Error " + e.message + " parsing torrent from " + item.torrentUrl))
+								} catch (e: IOException) {
+									return Response.error(VolleyError("Error " + e.message + " parsing torrent from " + item.torrentUrl))
+								} finally {
+									tmp.delete()
+								}
+							} else {
+								Log.i(Tag, "Empty bytes returned from URL: " + item.torrentUrl)
+								return Response.error(VolleyError("Empty bytes returned from URL: " + item.torrentUrl))
+							}
+						}
+						override fun deliverResponse(response: TorrentInfo) {
+							val ti = response
+
+							val fileStorage = ti.files()
+							try {
+								Log.i(Tag, "Parsing torrent from URL: " + item.torrentUrl)
+								for (fileNum in 0..fileStorage.numFiles()) {
+									if(fileStorage.fileName(fileNum).endsWith(".mp3")) {
+										volleyQueue.cancelAll(query)
+										Log.i(Tag, "Downloading torrent from URL: " + item.torrentUrl)
+										listener(ti)
+										break
+									}
+								}
+							}
+							catch (e: Exception) {
+								Log.w(Tag, "Error " + e.message + " parsing torrent URL: " + item.torrentUrl)
+							}
+						}
+					}
+					torrentRequest.tag = query
+					volleyQueue.add(torrentRequest)
 				}
+//				when (filteredResults.isEmpty()) {
+//					false -> listener(parsedResults.first().torrentUrl)
+//					true  -> errorListener(R.string.error_no_torrent_found)
+//				}
 			}, Response.ErrorListener { error ->
+				Log.i(Tag, error.message)
 				search_mirror(retry + 1, album, listener, errorListener)
 			}) {
 				override fun getHeaders(): MutableMap<String, String> {
@@ -88,7 +145,7 @@ class SkyTorrentsAdapter(context: Context) {
             }
             torStart = nextTorrentIndex
         }
-        return results
+        return results.slice(0..5)
     }
 
     private fun parseHtmlItem(htmlItem: String, prefixDetails: String): SearchResult {
@@ -124,7 +181,7 @@ class SkyTorrentsAdapter(context: Context) {
 
         // Torrent link is first
         val torrentLinkStart = htmlItem.indexOf(TORRENT_LINK, nameStart) + TORRENT_LINK.length
-        val torrentLink = htmlItem.substring(torrentLinkStart, htmlItem.indexOf(TORRENT_LINK_END, torrentLinkStart))
+        val torrentLink = prefixDetails + htmlItem.substring(torrentLinkStart, htmlItem.indexOf(TORRENT_LINK_END, torrentLinkStart))
 
         // Magnet link is second
         val magnetLinkStart = htmlItem.indexOf(MAGNET_LINK, torrentLinkStart) + MAGNET_LINK.length
@@ -167,7 +224,7 @@ class SkyTorrentsAdapter(context: Context) {
         val leechersText = htmlItem.substring(leechersStart, htmlItem.indexOf(LEECHERS_END, leechersStart))
         val leechers = Integer.parseInt(leechersText)
 
-        return SearchResult(name, magnetLink, details, size, date, seeders, leechers)
+        return SearchResult(name, torrentLink, details, size, date, seeders, leechers)
     }
 
 }
