@@ -145,7 +145,7 @@ class SkyTorrentsAdapter(context: Context) {
             }
             torStart = nextTorrentIndex
         }
-        return results.slice(0..5)
+        return results.slice(0..Math.min(5, results.size - 1))
     }
 
     private fun parseHtmlItem(htmlItem: String, prefixDetails: String): SearchResult {
