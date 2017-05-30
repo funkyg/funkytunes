@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<resources>
+    <string name="settings">Настройки</string>
+    <string name="version">Версия</string>
+    <string name="app_name">Funkytunes</string>
+    <string name="github_repository_title">Репозиторий на Github</string>
+    <string name="github_repository_summary">Перейти на репозиторий на Github</string>
+    <string name="gitlab_mirror_title">Зеркало на Gitlab</string>
+    <string name="gitlab_mirror_summary">Открыть зеркало на Gitlab</string>
+    <string name="notification_loading_title">Загрузка торрента…</string>
+    <string name="error_no_torrent_found">Ошибка: не найден соответствующий альбому торрент.</string>
+    <string name="error_torrent_invalid_files">Ошибка: торрент не содержит файлов mp3.</string>
+    <string name="update_available">Доступно обновление</string>
+    <string name="github_repository_missing">Репозиторий на Github отсутствует</string>
+    <string name="loading_torrent">Загрузка торрента</string>
+    <string name="playlist_empty">Плейлист пуст</string>
+    <string name="play_queue">Очередь воспроизведения</string>
+    <string name="search_title">Найти альбом…</string>
+    <string name="units_bps">%1$d Б/с</string>
+    <string name="units_kbps">%1$d КБ/с</string>
+    <string name="units_mbps">%1$d МБ/с</string>
+    <string name="units_gbps">%1$d ГБ/с</string>
+    <string name="play">Воспроизвести</string>
+    <string name="pause">Приостановить</string>
+    <string name="download">Скачать</string>
+    <string name="magnet_download_timeout">Загрузка Magnet заняла слишком много времени</string>
+</resources>
