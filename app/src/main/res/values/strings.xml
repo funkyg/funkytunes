@@ -36,4 +36,8 @@ By using \' Funkytunes\' or accessing this site you affirm that you are either m
     <string name="magnet_download_timeout">Magnet download took too long</string>
     <string name="loading_torrent">Loading torrent</string>
     <string name="playlist_empty">Playlist is empty</string>
+    <string name="units_bps">%1$d B/s</string>
+    <string name="units_kbps">%1$d KB/s</string>
+    <string name="units_mbps">%1$d MB/s</string>
+    <string name="units_gbps">%1$d B/s GB/s</string>
 </resources>

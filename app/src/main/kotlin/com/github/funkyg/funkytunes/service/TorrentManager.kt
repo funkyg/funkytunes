@@ -172,12 +172,14 @@ class TorrentManager(private val context: Context) : AlertListener {
      */
     fun getDownloadSpeed(): String {
         val rate =  sessionManager.downloadRate() / 8
-        val units = arrayOf(" B/s", " KB/s", " MB/s", " GB/s", " TB/s")
-        val df = NumberFormat.getIntegerInstance()
+        val units = arrayOf(R.string.units_bps, R.string.units_kbps, R.string.units_mbps, R.string.units_gbps)
 
-        if (rate <= 0)
-            return "0" + units.first();
+        if (rate <= 0) {
+            return context.getString(units.first(), 0)
+        }
+
         val digitGroups = (Math.log10(rate.toDouble())/Math.log10(1024.toDouble())).toInt()
-        return df.format(rate/Math.pow(1024.toDouble(), digitGroups.toDouble())) + units[digitGroups]
+        val amount = rate/Math.pow(1024.toDouble(), digitGroups.toDouble())
+        return context.getString(units[digitGroups], amount.toInt())
     }
 }
