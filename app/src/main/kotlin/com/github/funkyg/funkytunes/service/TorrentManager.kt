@@ -10,7 +10,8 @@ import com.frostwire.jlibtorrent.alerts.TorrentAddedAlert
 import com.github.funkyg.funkytunes.Album
 import com.github.funkyg.funkytunes.FunkyApplication
 import com.github.funkyg.funkytunes.R
-import com.github.funkyg.funkytunes.network.PirateBayAdapter
+//import com.github.funkyg.funkytunes.network.PirateBayAdapter
+import com.github.funkyg.funkytunes.network.SkyTorrentsAdapter
 import com.google.common.io.Files
 import java.io.File
 import java.text.NumberFormat
@@ -23,7 +24,8 @@ class TorrentManager(private val context: Context) : AlertListener {
     private val Tag = "TorrentManager"
     private val MAGNET_TIMEOUT_SECONDS = 60
 
-    @Inject lateinit var pirateBayAdapter: PirateBayAdapter
+//  @Inject lateinit var pirateBayAdapter: PirateBayAdapter
+    @Inject lateinit var skyTorrentsAdapter: SkyTorrentsAdapter
     private val sessionManager = SessionManager()
     private var files: List<FileInfo>? = null
     private var currentHash: Sha1Hash? = null
@@ -123,7 +125,7 @@ class TorrentManager(private val context: Context) : AlertListener {
             currentHash = null
         }
 
-        pirateBayAdapter.search(album, { magnet ->
+        skyTorrentsAdapter.search(album, { magnet ->
             Thread({ ->
                 val torrentBytes = sessionManager.fetchMagnet(magnet, MAGNET_TIMEOUT_SECONDS)
                 if (torrentBytes != null) {

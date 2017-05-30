@@ -4,7 +4,8 @@ import com.github.funkyg.funkytunes.activities.MainActivity
 import com.github.funkyg.funkytunes.network.ChartsFetcher
 import com.github.funkyg.funkytunes.network.UpdateChecker
 import com.github.funkyg.funkytunes.network.SearchHandler
-import com.github.funkyg.funkytunes.network.PirateBayAdapter
+//import com.github.funkyg.funkytunes.network.PirateBayAdapter
+import com.github.funkyg.funkytunes.network.SkyTorrentsAdapter
 import com.github.funkyg.funkytunes.service.MusicService
 import com.github.funkyg.funkytunes.service.NotificationHandler
 import com.github.funkyg.funkytunes.service.TorrentManager
@@ -18,7 +19,7 @@ interface DaggerComponent {
     fun inject(app: FunkyApplication)
     fun inject(chartsFetcher: ChartsFetcher)
     fun inject(searchHandler: SearchHandler)
-    fun inject(pirateBayAdapter: PirateBayAdapter)
+    fun inject(skyTorrentsAdapter: SkyTorrentsAdapter)
     fun inject(updateChecker: UpdateChecker)
     fun inject(musicService: MusicService)
     fun inject(notificationHandler: NotificationHandler)
