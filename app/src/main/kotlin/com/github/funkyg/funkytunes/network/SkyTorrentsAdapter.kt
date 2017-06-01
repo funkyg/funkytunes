@@ -93,12 +93,12 @@ class SkyTorrentsAdapter(context: Context) {
 							val ti = response
 							item.torrentInfo = ti
 
-							val fileStorage = ti.files()
+							val origFiles = ti.origFiles()
 							var fileUsable = false
 							try {
 								Log.i(Tag, "Parsing torrent from URL: " + item.torrentUrl)
-								for (fileNum in 0..fileStorage.numFiles()) {
-									val fileName = fileStorage.fileName(fileNum)
+								for (fileNum in 0..origFiles.numFiles()-1) {
+									val fileName = origFiles.filePath(fileNum)
 									if(fileName.endsWith(".mp3") || fileName.endsWith(".flac") || fileName.endsWith(".ogg") || fileName.endsWith(".m4a")) {
 										if(!fileUsable) {
 											Log.i(Tag, "Torrent usable: " + item.torrentUrl)
