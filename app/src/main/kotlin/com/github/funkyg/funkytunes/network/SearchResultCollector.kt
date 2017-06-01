@@ -22,6 +22,7 @@ class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnet
 	private val watchedRequests = arrayListOf<Request<TorrentInfo>>()
 	private var failedRequests = 0
 	private val searchResults = arrayListOf<SearchResult>()
+	private var readyToGo = false
 
 	fun watchRequest(req: Request<TorrentInfo>) {
 		watchedRequests.add(req)
@@ -30,12 +31,16 @@ class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnet
 	private fun getBestResult(): SearchResult {
 		assert(searchResults.size > 0)
 		val eligibleTorrents = searchResults
-		                       .sortedByDescending {r -> r.seeds + r.leechers}
+		                       .sortedByDescending {r -> ((r.seeds + r.leechers) * (if(r.torrentInfo == null) 1 else 50))}
 		Log.i(Tag, "Selecting torrent: ${eligibleTorrents[0].detailsUrl}")
 		return eligibleTorrents[0]
 	}
 
 	private fun checkComplete() {
+		if(!readyToGo) {
+			Log.i(Tag, "Not readyToGo yet")
+			return
+		}
 		if(watchedRequests.size <= failedRequests + searchResults.size) {
 			if(searchResults.size > 0) {
 				/* Success - got one or more good results */
@@ -51,8 +56,10 @@ class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnet
 					magnetListener(bestResult.magnetLink)
 				}
 			} else {
-				Log.w(Tag, "All requests failed")
-				errorListener(R.string.error_no_torrent_found)
+				if(watchedRequests.size > 0) {
+					Log.w(Tag, "All requests failed")
+					errorListener(R.string.error_no_torrent_found)
+				}
 			}
 		} else {
 			val totalCompleted = failedRequests + searchResults.size
@@ -71,5 +78,15 @@ class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnet
 	fun addResult(result: SearchResult) {
 		searchResults.add(result)
 		checkComplete()
+	}
+
+	/* Additional lock - no listeners will be called before go() is called */
+	fun go() {
+		readyToGo = true
+		checkComplete()
+	}
+
+	fun notify429() {
+		errorListener(R.string.error_429)
 	}
 }

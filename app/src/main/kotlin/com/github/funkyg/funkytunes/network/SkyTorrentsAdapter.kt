@@ -37,18 +37,13 @@ class SkyTorrentsAdapter(context: Context) {
         (context.applicationContext as FunkyApplication).component.inject(this)
     }
 
-    fun search(album: Album, torrentListener: (TorrentInfo) -> Unit, magnetListener: (String) -> Unit, errorListener: (Int) -> Unit) {
-		search_mirror(0, album, torrentListener, magnetListener, errorListener)
+    fun search(album: Album, resultCollector:SearchResultCollector) {
+		search_mirror(0, album, resultCollector)
 	}
 
-    fun search_mirror(retry: Int, album: Album, torrentListener: (TorrentInfo) -> Unit, magnetListener: (String) -> Unit, errorListener: (Int) -> Unit) {
-        // Exclude additions like "(Original Motion Picture Soundtrack)" or "(Deluxe Edition)" from
-        // the query.
-        val name = album.title.split('(', '[', limit = 2)[0]
-        val query = album.artist + " " + name
+    fun search_mirror(retry: Int, album: Album, resultCollector: SearchResultCollector) {
+		val query = album.getQuery()
 
-		val resultCollector = SearchResultCollector(torrentListener, magnetListener, errorListener)
-		
 		if(retry < DOMAINS.size) {
 			val domain = DOMAINS[retry]
 			// Build full URL string
@@ -68,26 +63,30 @@ class SkyTorrentsAdapter(context: Context) {
 					}){
 						override fun parseNetworkResponse(response: NetworkResponse) : Response<TorrentInfo> {
 							if (response.statusCode == 429) {
-                                errorListener(R.string.error_429)
-							}
-							val bytes = response.data
-							if (bytes != null) {
-								val tmp = createTempFile("funkytunes", ".torrent")
-								Files.write(bytes, tmp)
-								try {
-									val ti = TorrentInfo(tmp)
+								resultCollector.notify429()
+								return Response.error(VolleyError("Error 429 getting torrent from " + item.torrentUrl))
+							} 
+							else
+							{
+								val bytes = response.data
+								if (bytes != null) {
+									val tmp = createTempFile("funkytunes", ".torrent")
+									Files.write(bytes, tmp)
+									try {
+										val ti = TorrentInfo(tmp)
 
-									return Response.success(ti, HttpHeaderParser.parseCacheHeaders(response))
-								} catch (e: IllegalArgumentException) {
-									return Response.error(VolleyError("Error " + e.message + " parsing torrent from " + item.torrentUrl))
-								} catch (e: IOException) {
-									return Response.error(VolleyError("Error " + e.message + " parsing torrent from " + item.torrentUrl))
-								} finally {
-									tmp.delete()
+										return Response.success(ti, HttpHeaderParser.parseCacheHeaders(response))
+									} catch (e: IllegalArgumentException) {
+										return Response.error(VolleyError("Error " + e.message + " parsing torrent from " + item.torrentUrl))
+									} catch (e: IOException) {
+										return Response.error(VolleyError("Error " + e.message + " parsing torrent from " + item.torrentUrl))
+									} finally {
+										tmp.delete()
+									}
+								} else {
+									Log.i(Tag, "Empty bytes returned from URL: " + item.torrentUrl)
+									return Response.error(VolleyError("Empty bytes returned from URL: " + item.torrentUrl))
 								}
-							} else {
-								Log.i(Tag, "Empty bytes returned from URL: " + item.torrentUrl)
-								return Response.error(VolleyError("Empty bytes returned from URL: " + item.torrentUrl))
 							}
 						}
 						override fun deliverResponse(response: TorrentInfo) {
@@ -122,7 +121,7 @@ class SkyTorrentsAdapter(context: Context) {
 				}
 			}, Response.ErrorListener { error ->
 				Log.i(Tag, error.message ?: "(No message from volley)")
-				search_mirror(retry + 1, album, torrentListener, magnetListener, errorListener)
+				search_mirror(retry + 1, album, resultCollector)
 			}) {
 				override fun getHeaders(): MutableMap<String, String> {
 					val headers = HashMap<String, String>()
