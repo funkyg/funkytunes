@@ -74,6 +74,8 @@ class PirateBayAdapter(context: Context) {
 			}
 
 			volleyQueue.add(request)
+		} else {
+			resultCollector.go()
 		}
     }
 
