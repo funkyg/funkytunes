@@ -11,7 +11,19 @@ import java.util.*
 class SearchResult(val title: String, val magnetLink: String, val torrentUrl: String?, val detailsUrl: String,
 					val size: String, val added: Date?, val seeds: Int, val leechers: Int,
 					var torrentInfo: TorrentInfo?) {
-					}
+	private var isFlac = false
+
+	fun score(): Int {
+		val peers = seeds + leechers
+		val torrentAvailableMultiplier = if(torrentInfo == null) 1 else 50
+		val nonFlacMultiplier = if(isFlac) 1 else 2
+
+		return peers * torrentAvailableMultiplier * nonFlacMultiplier
+	}
+	fun flacDetected() {
+		isFlac = true
+	}
+}
 
 /*
  * Collects responses from torrent requests
@@ -40,7 +52,7 @@ class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnet
 	private fun getBestResult(): SearchResult {
 		assert(searchResults.size > 0)
 		val eligibleTorrents = searchResults
-		                       .sortedByDescending {r -> ((r.seeds + r.leechers) * (if(r.torrentInfo == null) 1 else 50))}
+		                       .sortedByDescending {r -> r.score()}
 		Log.i(Tag, "Selecting torrent: ${eligibleTorrents[0].detailsUrl}")
 		return eligibleTorrents[0]
 	}
