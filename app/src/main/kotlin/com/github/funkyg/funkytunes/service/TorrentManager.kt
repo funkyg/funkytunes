@@ -10,7 +10,7 @@ import com.frostwire.jlibtorrent.alerts.TorrentAddedAlert
 import com.github.funkyg.funkytunes.Album
 import com.github.funkyg.funkytunes.FunkyApplication
 import com.github.funkyg.funkytunes.R
-//import com.github.funkyg.funkytunes.network.PirateBayAdapter
+import com.github.funkyg.funkytunes.network.PirateBayAdapter
 import com.github.funkyg.funkytunes.network.SkyTorrentsAdapter
 import com.github.funkyg.funkytunes.network.SearchResultCollector
 import com.google.common.io.Files
@@ -25,7 +25,7 @@ class TorrentManager(private val context: Context) : AlertListener {
     private val Tag = "TorrentManager"
     private val MAGNET_TIMEOUT_SECONDS = 60
 
-//    @Inject lateinit var pirateBayAdapter: PirateBayAdapter
+    @Inject lateinit var pirateBayAdapter: PirateBayAdapter
     @Inject lateinit var skyTorrentsAdapter: SkyTorrentsAdapter
     private val sessionManager = SessionManager()
     private var files: List<FileInfo>? = null
@@ -61,7 +61,7 @@ class TorrentManager(private val context: Context) : AlertListener {
 					handle.prioritizeFiles(getTorrentFiles(handle).map{ Priority.IGNORE }.toTypedArray())
 					files = getTorrentFiles(handle)
 							.withIndex()
-							.filter { p -> p.value.endsWith(".mp3") }
+							.filter { p -> (p.value.endsWith(".mp3")  }
 							.sortedBy { f -> f.value }
 							.map { f -> FileInfo(f.value, f.index, false, File(handle.savePath(), f.value)) }
 					if (files!!.isEmpty()) {
@@ -165,8 +165,7 @@ class TorrentManager(private val context: Context) : AlertListener {
 				errorListener)
 
         skyTorrentsAdapter.search(album, resultCollector)
-//        pirateBayAdapter.search(album, this::startTorrent, this::startMagnet, errorListener)
-		resultCollector.go()
+        pirateBayAdapter.search(album, resultCollector)
     }
 
     fun requestSong(position: Int, listener: (File) -> Unit) {

@@ -36,11 +36,11 @@ class PirateBayAdapter(context: Context) {
         (context.applicationContext as FunkyApplication).component.inject(this)
     }
 
-    fun search(album: Album, torrentListener: (TorrentInfo) -> Unit, magnetListener: (String) -> Unit, errorListener: (Int) -> Unit) {
-		search_mirror(0, album, torrentListener, magnetListener, errorListener)
+    fun search(album: Album, resultCollector: SearchResultCollector) {
+		search_mirror(0, album, resultCollector)
 	}
 
-    fun search_mirror(retry: Int, album: Album, torrentListener: (TorrentInfo) -> Unit, magnetListener: (String) -> Unit, errorListener: (Int) -> Unit) {
+    fun search_mirror(retry: Int, album: Album, resultCollector: SearchResultCollector) {
         // Exclude additions like "(Original Motion Picture Soundtrack)" or "(Deluxe Edition)" from
         // the query.
         val name = album.title.split('(', '[', limit = 2)[0]
@@ -51,14 +51,19 @@ class PirateBayAdapter(context: Context) {
 			val url = String.format(domain + QUERYURL, URLEncoder.encode(query, "UTF-8"))
 			Log.i(Tag, "Trying URL: " + url)
 
-			val request = object : StringRequest(Method.GET, url, Response.Listener<String> { reply ->
+			val request = object : StringRequest(Method.GET, url, Response.Listener<String> Req@ { reply ->
 				val parsedResults = parseHtml(reply, domain)
 				when (parsedResults.isEmpty()) {
-					false -> magnetListener(parsedResults.first().magnetLink)
-					true  -> errorListener(R.string.error_no_torrent_found)
+					false -> { for(r in parsedResults) {
+								resultCollector.watchRequest(r.magnetLink)
+								resultCollector.addResult(r)
+							   }   
+							 }
+					true  -> resultCollector.addFailed()
 				}
+				resultCollector.go()
 			}, Response.ErrorListener { error ->
-				search_mirror(retry + 1, album, torrentListener, magnetListener, errorListener)
+				search_mirror(retry + 1, album, resultCollector)
 			}) {
 				override fun getHeaders(): MutableMap<String, String> {
 					val headers = HashMap<String, String>()

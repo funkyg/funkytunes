@@ -2,6 +2,7 @@ package com.github.funkyg.funkytunes.network
 
 import android.util.Log
 import com.android.volley.Request
+import com.android.volley.toolbox.StringRequest
 import com.frostwire.jlibtorrent.*
 import com.github.funkyg.funkytunes.R
 import java.util.*
@@ -19,12 +20,20 @@ class SearchResult(val title: String, val magnetLink: String, val torrentUrl: St
 
 class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnetListener: (String)->Unit, val errorListener: (Int) -> Unit) {
 	private val Tag = "ResultCollector"
-	private val watchedRequests = arrayListOf<Request<TorrentInfo>>()
+	private val watchedRequests = arrayListOf<String>()
 	private var failedRequests = 0
 	private val searchResults = arrayListOf<SearchResult>()
 	private var readyToGo = false
 
 	fun watchRequest(req: Request<TorrentInfo>) {
+		watchedRequests.add(req.getUrl())
+	}
+
+	fun watchRequest(req: StringRequest) {
+		watchedRequests.add(req.getUrl())
+	}
+
+	fun watchRequest(req: String) {
 		watchedRequests.add(req)
 	}
 
@@ -65,7 +74,7 @@ class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnet
 			val totalCompleted = failedRequests + searchResults.size
 			Log.i(Tag, "${totalCompleted} / ${watchedRequests.size} - ${searchResults.size} usable")
 			for(request in watchedRequests) {
-				Log.i(Tag, "INQUEUE: " + request.getUrl())
+				Log.i(Tag, "INQUEUE: " + request)
 			}
 		}
 	}
@@ -81,6 +90,7 @@ class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnet
 	}
 
 	/* Additional lock - no listeners will be called before go() is called */
+	/* Call it when all the requests have been added in the last adapter */
 	fun go() {
 		readyToGo = true
 		checkComplete()
