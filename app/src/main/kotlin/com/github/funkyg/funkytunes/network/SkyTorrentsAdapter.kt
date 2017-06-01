@@ -100,11 +100,13 @@ class SkyTorrentsAdapter(context: Context) {
 								for (fileNum in 0..fileStorage.numFiles()) {
 									val fileName = fileStorage.fileName(fileNum)
 									if(fileName.endsWith(".mp3") || fileName.endsWith(".flac") || fileName.endsWith(".ogg") || fileName.endsWith(".m4a")) {
-										Log.i(Tag, "Torrent usable: " + item.torrentUrl)
+										if(!fileUsable) {
+											Log.i(Tag, "Torrent usable: " + item.torrentUrl)
+											resultCollector.addResult(item)
+										}
 										if(fileName.endsWith(".flac")) {
 											item.flacDetected()
 										}
-										resultCollector.addResult(item)
 										fileUsable = true
 									}
 								}
