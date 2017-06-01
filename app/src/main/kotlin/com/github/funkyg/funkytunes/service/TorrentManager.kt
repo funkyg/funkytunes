@@ -61,7 +61,7 @@ class TorrentManager(private val context: Context) : AlertListener {
 					handle.prioritizeFiles(getTorrentFiles(handle).map{ Priority.IGNORE }.toTypedArray())
 					files = getTorrentFiles(handle)
 							.withIndex()
-							.filter { p -> (p.value.endsWith(".mp3")  }
+							.filter { p -> (p.value.endsWith(".mp3") || p.value.endswith(".flac") || p.value.endswith(".ogg") || p.value.endswith(".m4a") }
 							.sortedBy { f -> f.value }
 							.map { f -> FileInfo(f.value, f.index, false, File(handle.savePath(), f.value)) }
 					if (files!!.isEmpty()) {

@@ -98,7 +98,8 @@ class SkyTorrentsAdapter(context: Context) {
 							try {
 								Log.i(Tag, "Parsing torrent from URL: " + item.torrentUrl)
 								for (fileNum in 0..fileStorage.numFiles()) {
-									if(fileStorage.fileName(fileNum).endsWith(".mp3")) {
+									fileName = fileStorage.fileName(fileNum)
+									if(fileName.endsWith(".mp3") || fileName.endswith(".flac") || fileName.endswith(".ogg") || fileName.endswith(".m4a")) {
 										Log.i(Tag, "Torrent usable: " + item.torrentUrl)
 										resultCollector.addResult(item)
 										fileUsable = true
