@@ -37,30 +37,34 @@ class SkyTorrentsAdapter(context: Context) {
         (context.applicationContext as FunkyApplication).component.inject(this)
     }
 
-    class SearchResult(val title: String, val torrentUrl: String, val detailsUrl: String,
-                       val size: String, val added: Date?, val seeds: Int, val leechers: Int)
-
-    fun search(album: Album, listener: (TorrentInfo) -> Unit, errorListener: (Int) -> Unit) {
-		search_mirror(0, album, listener, errorListener)
+    fun search(album: Album, torrentListener: (TorrentInfo) -> Unit, magnetListener: (String) -> Unit, errorListener: (Int) -> Unit) {
+		search_mirror(0, album, torrentListener, magnetListener, errorListener)
 	}
 
-    fun search_mirror(retry: Int, album: Album, listener: (TorrentInfo) -> Unit, errorListener: (Int) -> Unit) {
+    fun search_mirror(retry: Int, album: Album, torrentListener: (TorrentInfo) -> Unit, magnetListener: (String) -> Unit, errorListener: (Int) -> Unit) {
         // Exclude additions like "(Original Motion Picture Soundtrack)" or "(Deluxe Edition)" from
         // the query.
         val name = album.title.split('(', '[', limit = 2)[0]
         val query = album.artist + " " + name
+
+		val resultCollector = SearchResultCollector(torrentListener, magnetListener, errorListener)
+		
 		if(retry < DOMAINS.size) {
 			val domain = DOMAINS[retry]
 			// Build full URL string
 			val url = String.format(domain + QUERYURL, URLEncoder.encode(query, "UTF-8"))
 			Log.i(Tag, "Trying URL: " + url)
 
+			// Get the results page 
 			val request = object : StringRequest(Method.GET, url, Response.Listener<String> { reply ->
 				val parsedResults = parseHtml(reply, domain)
+
+				// Fetch torrent files for results
 				for (item in parsedResults) {
 					Log.i(Tag, "Trying torrent URL: " + item.torrentUrl)
 					val torrentRequest = object : Request<TorrentInfo>(Method.GET, item.torrentUrl, Response.ErrorListener { error ->
-						Log.i(Tag, "Volley error for URL: " + item.torrentUrl)
+						Log.i(Tag, "Volley error '" + error.message + "' for URL: " + item.torrentUrl)
+						resultCollector.addFailed()
 					}){
 						override fun parseNetworkResponse(response: NetworkResponse) : Response<TorrentInfo> {
 							val bytes = response.data
@@ -85,39 +89,41 @@ class SkyTorrentsAdapter(context: Context) {
 						}
 						override fun deliverResponse(response: TorrentInfo) {
 							val ti = response
+							item.torrentInfo = ti
 
 							val fileStorage = ti.files()
+							var fileUsable = false
 							try {
 								Log.i(Tag, "Parsing torrent from URL: " + item.torrentUrl)
 								for (fileNum in 0..fileStorage.numFiles()) {
 									if(fileStorage.fileName(fileNum).endsWith(".mp3")) {
-										volleyQueue.cancelAll(query)
-										Log.i(Tag, "Downloading torrent from URL: " + item.torrentUrl)
-										listener(ti)
+										Log.i(Tag, "Torrent usable: " + item.torrentUrl)
+										resultCollector.addResult(item)
+										fileUsable = true
 										break
 									}
+								}
+								if(!fileUsable) {
+									resultCollector.addFailed()
 								}
 							}
 							catch (e: Exception) {
 								Log.w(Tag, "Error " + e.message + " parsing torrent URL: " + item.torrentUrl)
+								resultCollector.addFailed()
 							}
 						}
 					}
 					torrentRequest.tag = query
+					resultCollector.watchRequest(torrentRequest)
 					volleyQueue.add(torrentRequest)
 				}
-//				when (filteredResults.isEmpty()) {
-//					false -> listener(parsedResults.first().torrentUrl)
-//					true  -> errorListener(R.string.error_no_torrent_found)
-//				}
 			}, Response.ErrorListener { error ->
-				Log.i(Tag, error.message)
-				search_mirror(retry + 1, album, listener, errorListener)
+				Log.i(Tag, error.message ?: "(No message from volley)")
+				search_mirror(retry + 1, album, torrentListener, magnetListener, errorListener)
 			}) {
 				override fun getHeaders(): MutableMap<String, String> {
 					val headers = HashMap<String, String>()
-					// Spoof Firefox user agent to force a result from The Pirate Bay
-					headers.put("User-agent", "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2")
+					headers.put("User-agent", "FunkyTunes")
 					return headers
 				}
 			}
@@ -149,6 +155,7 @@ class SkyTorrentsAdapter(context: Context) {
     }
 
     private fun parseHtmlItem(htmlItem: String, prefixDetails: String): SearchResult {
+		// TODO: parse XML file instead? 
         // Texts to find subsequently
         val DETAILS = "<a href=\""
         val DETAILS_END = "\" title=\""
@@ -169,7 +176,7 @@ class SkyTorrentsAdapter(context: Context) {
         val SEEDERS_END = "</td>"
         val LEECHERS = "<td style=\"text-align: center;\">"
         val LEECHERS_END = "</td>"
-        val prefixYear = (Date().year + 1900).toString() + " " // Date.getYear() gives the current year - 1900
+        val prefixYear = (Calendar.getInstance().get(Calendar.YEAR)).toString() + " " // Date.getYear() gives the current year - 1900
         val df1 = SimpleDateFormat("yyyy MM-dd HH:mm", Locale.US)
         val df2 = SimpleDateFormat("MM-dd yyyy", Locale.US)
 
@@ -224,7 +231,9 @@ class SkyTorrentsAdapter(context: Context) {
         val leechersText = htmlItem.substring(leechersStart, htmlItem.indexOf(LEECHERS_END, leechersStart))
         val leechers = Integer.parseInt(leechersText)
 
-        return SearchResult(name, torrentLink, details, size, date, seeders, leechers)
+        return SearchResult(name, magnetLink, torrentLink, details, 
+							size, date, seeders, leechers, 
+							null)
     }
 
 }

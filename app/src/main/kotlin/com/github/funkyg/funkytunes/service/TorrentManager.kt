@@ -50,52 +50,57 @@ class TorrentManager(private val context: Context) : AlertListener {
     override fun types() = intArrayOf(AlertType.TORRENT_ADDED.swig(), AlertType.FILE_COMPLETED.swig())
 
     override fun alert(alert: Alert<*>) {
-        val type = alert.type()
+		try {
+			val type = alert.type()
 
-        when (type) {
-            AlertType.TORRENT_ADDED -> {
-                val handle = (alert as TorrentAddedAlert).handle()
-                handle.resume()
-                handle.prioritizeFiles(getTorrentFiles(handle).map{ Priority.IGNORE }.toTypedArray())
-                files = getTorrentFiles(handle)
-                        .withIndex()
-                        .filter { p -> p.value.endsWith(".mp3") }
-                        .sortedBy { f -> f.value }
-                        .map { f -> FileInfo(f.value, f.index, false, File(handle.savePath(), f.value)) }
-                if (files!!.isEmpty()) {
-                    errorListener!!.invoke(R.string.error_torrent_invalid_files)
-                    sessionManager.remove(handle)
-                }
-                else {
-                    currentHash = handle.infoHash()
-                    onTorrentAddedListener?.invoke(files!!.map { f -> convertToFriendlySongName(f.filename) })
-                    onTorrentAddedListener = null
-                }
-            }
-            AlertType.FILE_COMPLETED -> {
-                val position = (alert as FileCompletedAlert).index()
-                val currentFile = files!!.find { f -> f.indexInTorrent == position }
+			when (type) {
+				AlertType.TORRENT_ADDED -> {
+					val handle = (alert as TorrentAddedAlert).handle()
+					handle.resume()
+					handle.prioritizeFiles(getTorrentFiles(handle).map{ Priority.IGNORE }.toTypedArray())
+					files = getTorrentFiles(handle)
+							.withIndex()
+							.filter { p -> p.value.endsWith(".mp3") }
+							.sortedBy { f -> f.value }
+							.map { f -> FileInfo(f.value, f.index, false, File(handle.savePath(), f.value)) }
+					if (files!!.isEmpty()) {
+						errorListener!!.invoke(R.string.error_torrent_invalid_files)
+						sessionManager.remove(handle)
+					}
+					else {
+						currentHash = handle.infoHash()
+						onTorrentAddedListener?.invoke(files!!.map { f -> convertToFriendlySongName(f.filename) })
+						onTorrentAddedListener = null
+					}
+				}
+				AlertType.FILE_COMPLETED -> {
+					val position = (alert as FileCompletedAlert).index()
+					val currentFile = files!!.find { f -> f.indexInTorrent == position }
 
-                // For some reason we are getting this event for m3u and other file types which we
-                // don't even download.
-                currentFile ?: return
+					// For some reason we are getting this event for m3u and other file types which we
+					// don't even download.
+					currentFile ?: return
 
-                Log.i(Tag, "Finished downloading " + currentFile.path.name)
-                files = files!!.map { f ->
-                    if (f.indexInTorrent == position)
-                        f.copy(completed = true)
-                    else
-                        f
-                }
+					Log.i(Tag, "Finished downloading " + currentFile.path.name)
+					files = files!!.map { f ->
+						if (f.indexInTorrent == position)
+							f.copy(completed = true)
+						else
+							f
+					}
 
-                if (onFileCompletedListener != null && onFileCompletedListener?.first == position) {
-                    onFileCompletedListener?.second?.invoke(currentFile.path)
-                    onFileCompletedListener = null
+					if (onFileCompletedListener != null && onFileCompletedListener?.first == position) {
+						onFileCompletedListener?.second?.invoke(currentFile.path)
+						onFileCompletedListener = null
 
-                    preloadNextTrack(position, alert.handle())
-                }
-            }
-        }
+						preloadNextTrack(position, alert.handle())
+					}
+				}
+			}
+		} catch (e: Exception) {
+			Log.e(Tag, Log.getStackTraceString(e))
+			throw e
+		}
     }
 
     private fun convertToFriendlySongName(name: String): String {
@@ -105,7 +110,9 @@ class TorrentManager(private val context: Context) : AlertListener {
                 .replace("-", " - ")
                 .split(" ").map { n ->
                 val stringArray = n.trim().toCharArray()
-                stringArray[0] = Character.toUpperCase(stringArray[0])
+				if(stringArray.size > 0) {
+					stringArray[0] = Character.toUpperCase(stringArray[0])
+				}
                 String(stringArray)
             }
             .joinToString(" ")
@@ -116,6 +123,31 @@ class TorrentManager(private val context: Context) : AlertListener {
         return (0..origFiles.numFiles()-1).map { i -> origFiles.filePath(i) }
     }
 
+	fun startTorrent(torrentInfo: TorrentInfo) {
+		Thread({ ->
+			if (torrentInfo != null) {
+				sessionManager.download(torrentInfo, context.filesDir)
+			}
+		}).start()
+	}
+
+	fun startMagnet(magnet: String) { 
+		Thread({ ->
+			val torrentBytes = sessionManager.fetchMagnet(magnet, MAGNET_TIMEOUT_SECONDS)
+			if (torrentBytes != null) {
+				val tmp = createTempFile("funkytunes", ".torrent")
+				Files.write(torrentBytes, tmp)
+				val ti = TorrentInfo(tmp)
+				sessionManager.download(ti, context.filesDir)
+				tmp.delete()
+			}
+			else {
+				Log.w(Tag, "Fetching torrent from magnet timed out")
+				errorListener!!.invoke(R.string.magnet_download_timeout)
+			}
+		}).start()
+	}
+
     fun setCurrentAlbum(album: Album, listener: (List<String>) -> Unit, errorListener: (Int) -> Unit) {
         assert(onTorrentAddedListener == null)
         onTorrentAddedListener = listener
@@ -125,29 +157,8 @@ class TorrentManager(private val context: Context) : AlertListener {
             currentHash = null
         }
 
-//        pirateBayAdapter.search(album, { magnet ->
-//            Thread({ ->
-//                val torrentBytes = sessionManager.fetchMagnet(magnet, MAGNET_TIMEOUT_SECONDS)
-//                if (torrentBytes != null) {
-//                    val tmp = createTempFile("funkytunes", ".torrent")
-//                    Files.write(torrentBytes, tmp)
-//                    val ti = TorrentInfo(tmp)
-//                    sessionManager.download(ti, context.filesDir)
-//                    tmp.delete()
-//                }
-//                else {
-//                    Log.w(Tag, "Fetching torrent from magnet timed out")
-//                    errorListener(R.string.magnet_download_timeout)
-//                }
-//            }).start()
-//        }, errorListener)
-        skyTorrentsAdapter.search(album, { torrentInfo ->
-            Thread({ ->
-                if (torrentInfo != null) {
-                    sessionManager.download(torrentInfo, context.filesDir)
-                }
-            }).start()
-        }, errorListener)
+        skyTorrentsAdapter.search(album, this::startTorrent, this::startMagnet, errorListener)
+//        pirateBayAdapter.search(album, startTorrent, startMagnet, errorListener)
     }
 
     fun requestSong(position: Int, listener: (File) -> Unit) {
