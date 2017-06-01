@@ -67,6 +67,9 @@ class SkyTorrentsAdapter(context: Context) {
 						resultCollector.addFailed()
 					}){
 						override fun parseNetworkResponse(response: NetworkResponse) : Response<TorrentInfo> {
+							if (response.statusCode == 429) {
+                                errorListener(R.string.error_429)
+							}
 							val bytes = response.data
 							if (bytes != null) {
 								val tmp = createTempFile("funkytunes", ".torrent")

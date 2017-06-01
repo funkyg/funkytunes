@@ -28,6 +28,7 @@ By using \' Funkytunes\' or accessing this site you affirm that you are either m
     <string name="accept">Accept</string>
     <string name="leave">Leave</string>
     <string name="error_no_torrent_found">Error: No matching torrent found for album.</string>
+    <string name="error_429">Error: The search engine asks to perform fewer requests.</string>
     <string name="error_torrent_invalid_files">Error: Torrent does not contain any mp3 files.</string>
     <string name="update_available">Update Available</string>
     <string name="download">Download</string>

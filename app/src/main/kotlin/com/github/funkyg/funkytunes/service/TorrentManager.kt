@@ -98,6 +98,7 @@ class TorrentManager(private val context: Context) : AlertListener {
 				}
 			}
 		} catch (e: Exception) {
+			Log.e(Tag, "This error prevented the torrent file from downloading:")
 			Log.e(Tag, Log.getStackTraceString(e))
 			throw e
 		}
