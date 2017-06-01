@@ -59,7 +59,16 @@ class SkyTorrentsAdapter(context: Context) {
 					Log.i(Tag, "Trying torrent URL: " + item.torrentUrl)
 					val torrentRequest = object : Request<TorrentInfo>(Method.GET, item.torrentUrl, Response.ErrorListener { error ->
 						Log.i(Tag, "Volley error '" + error.message + "' for URL: " + item.torrentUrl)
-						resultCollector.addFailed()
+						val lowerTitle = item.title.toLowerCase()
+						// Add magnet if it has a supported file format in name
+						if(lowerTitle.indexOf("mp3") != -1 || lowerTitle.indexOf("ogg") != -1 || lowerTitle.indexOf("m4a") != -1) {
+							resultCollector.addResult(item)
+						} else if(lowerTitle.indexOf("flac") != -1) {
+							item.flacDetected()
+							resultCollector.addResult(item)
+						} else {
+							resultCollector.addFailed()
+						}
 					}){
 						override fun parseNetworkResponse(response: NetworkResponse) : Response<TorrentInfo> {
 							if (response.statusCode == 429) {
