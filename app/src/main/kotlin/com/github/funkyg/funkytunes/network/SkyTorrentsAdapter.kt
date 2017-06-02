@@ -29,7 +29,7 @@ class SkyTorrentsAdapter(context: Context) {
 
     private val Tag = "SkyTorrentsAdapter"
     private val DOMAINS = arrayOf("https://www.skytorrents.in")
-    private val QUERYURL = "/search/all/ed/1/?l=en_us&q=%s"
+    private val QUERYURL = "/search/all/ss/1/?l=en_us&q=%s"
 
     @Inject lateinit var volleyQueue: RequestQueue
 
