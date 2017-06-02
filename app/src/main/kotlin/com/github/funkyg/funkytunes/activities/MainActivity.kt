@@ -20,6 +20,7 @@ import com.github.funkyg.funkytunes.databinding.ItemMainBinding
 import com.github.funkyg.funkytunes.network.ChartsFetcher
 import com.github.funkyg.funkytunes.network.SearchHandler
 import com.github.funkyg.funkytunes.network.UpdateChecker
+import com.github.funkyg.funkytunes.service.MusicService
 import com.github.nitrico.lastadapter.Holder
 import com.github.nitrico.lastadapter.ItemType
 import com.github.nitrico.lastadapter.LastAdapter
@@ -93,6 +94,11 @@ class MainActivity : BaseActivity(), SearchView.OnQueryTextListener {
             }
             R.id.settings -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
+                return true
+            }
+            R.id.exit -> {
+                stopService(Intent(this, MusicService::class.java))
+                finish()
                 return true
             }
             else -> return super.onOptionsItemSelected(item)

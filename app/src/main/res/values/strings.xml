@@ -40,4 +40,5 @@ By using \' Funkytunes\' or accessing this site you affirm that you are either m
     <string name="units_kbps">%1$d KB/s</string>
     <string name="units_mbps">%1$d MB/s</string>
     <string name="units_gbps">%1$d GB/s</string>
+    <string name="exit">Exit</string>
 </resources>
