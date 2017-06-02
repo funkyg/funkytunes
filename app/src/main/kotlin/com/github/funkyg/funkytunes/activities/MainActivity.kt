@@ -5,12 +5,14 @@ import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
 import android.support.v4.view.MenuItemCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.SearchView
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.util.Log
 import com.github.funkyg.funkytunes.Album
 import com.github.funkyg.funkytunes.BR
 import com.github.funkyg.funkytunes.FunkyApplication
@@ -32,7 +34,12 @@ class MainActivity : BaseActivity(), SearchView.OnQueryTextListener {
     @Inject lateinit var updateChecker: UpdateChecker
     @Inject lateinit var searchHandler: SearchHandler
     private lateinit var binding: ActivityMainBinding
+	private lateinit var searchDebounceHandler: Handler
+	private lateinit var searchDebounceRunnable: Runnable
+	private var oldSearchText = ""
+	private var searchText = ""
     private var searchView: SearchView? = null
+	private val Tag = "MainActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +50,22 @@ class MainActivity : BaseActivity(), SearchView.OnQueryTextListener {
 
         chartsFetcher.fetchAppleAlbumFeed { f -> showAlbums(f) }
         checkUpdates()
+
+		searchDebounceHandler = Handler()
+		searchDebounceRunnable = Runnable {
+			if (searchText != oldSearchText) {
+				if (!searchText.isEmpty()) {
+					doSearchText(searchText)
+				}
+				else {
+					chartsFetcher.fetchAppleAlbumFeed { f -> showAlbums(f) }
+				}
+
+				oldSearchText = searchText
+			}
+			searchDebounceHandler.postDelayed(searchDebounceRunnable, 500)
+		}
+		searchDebounceHandler.postDelayed(searchDebounceRunnable, 500)
     }
 
     override fun onServiceConnected() {
@@ -65,6 +88,12 @@ class MainActivity : BaseActivity(), SearchView.OnQueryTextListener {
         binding.progress.visibility = View.GONE
 
     }
+
+	private fun doSearchText(text: String) {
+		SearchHandler(this).search(searchText, { a ->
+			showAlbums(a)
+		})
+	}
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         super.onCreateOptionsMenu(menu)
@@ -105,20 +134,15 @@ class MainActivity : BaseActivity(), SearchView.OnQueryTextListener {
         }
     }
 
-    override fun onQueryTextSubmit(query: String) = true
+    override fun onQueryTextSubmit(query: String): Boolean {
+		if(!query.isEmpty()) {
+			doSearchText(query)
+		}
+		return true
+	}
 
     override fun onQueryTextChange(newText: String): Boolean {
-        if (!newText.isEmpty()) {
-            SearchHandler(this).search(newText, { a ->
-                // Dont show outdated results if the query has already changed in between
-                if (newText != searchView?.query.toString()) {
-                    showAlbums(a)
-                }
-            })
-        }
-        else {
-            chartsFetcher.fetchAppleAlbumFeed { f -> showAlbums(f) }
-        }
+		this.searchText = newText
         return true
     }
 

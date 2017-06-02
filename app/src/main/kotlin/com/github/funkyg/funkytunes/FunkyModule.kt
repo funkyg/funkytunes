@@ -36,4 +36,7 @@ class FunkyModule(private val app: FunkyApplication) {
 
     @Provides
     fun getPirateBayAdapter() = PirateBayAdapter(app)
+
+    @Provides
+    fun getSkyTorrentsAdapter() = SkyTorrentsAdapter(app)
 }

@@ -7,6 +7,7 @@ import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.github.funkyg.funkytunes.Album
 import com.github.funkyg.funkytunes.FunkyApplication
+import com.frostwire.jlibtorrent.*
 import com.github.funkyg.funkytunes.R
 import java.net.URLEncoder
 import java.text.ParseException
@@ -35,14 +36,11 @@ class PirateBayAdapter(context: Context) {
         (context.applicationContext as FunkyApplication).component.inject(this)
     }
 
-    class SearchResult(val title: String, val torrentUrl: String, val detailsUrl: String,
-                       val size: String, val added: Date?, val seeds: Int, val leechers: Int)
-
-    fun search(album: Album, listener: (String) -> Unit, errorListener: (Int) -> Unit) {
-		search_mirror(0, album, listener, errorListener)
+    fun search(album: Album, resultCollector: SearchResultCollector) {
+		search_mirror(0, album, resultCollector)
 	}
 
-    fun search_mirror(retry: Int, album: Album, listener: (String) -> Unit, errorListener: (Int) -> Unit) {
+    fun search_mirror(retry: Int, album: Album, resultCollector: SearchResultCollector) {
         // Exclude additions like "(Original Motion Picture Soundtrack)" or "(Deluxe Edition)" from
         // the query.
         val name = album.title.split('(', '[', limit = 2)[0]
@@ -53,14 +51,19 @@ class PirateBayAdapter(context: Context) {
 			val url = String.format(domain + QUERYURL, URLEncoder.encode(query, "UTF-8"))
 			Log.i(Tag, "Trying URL: " + url)
 
-			val request = object : StringRequest(Method.GET, url, Response.Listener<String> { reply ->
+			val request = object : StringRequest(Method.GET, url, Response.Listener<String> Req@ { reply ->
 				val parsedResults = parseHtml(reply, domain)
 				when (parsedResults.isEmpty()) {
-					false -> listener(parsedResults.first().torrentUrl)
-					true  -> errorListener(R.string.error_no_torrent_found)
+					false -> { for(r in parsedResults) {
+								resultCollector.watchRequest(r.magnetLink)
+								resultCollector.addResult(r)
+							   }   
+							 }
+					true  -> resultCollector.addFailed()
 				}
+				resultCollector.go()
 			}, Response.ErrorListener { error ->
-				search_mirror(retry + 1, album, listener, errorListener)
+				search_mirror(retry + 1, album, resultCollector)
 			}) {
 				override fun getHeaders(): MutableMap<String, String> {
 					val headers = HashMap<String, String>()
@@ -71,6 +74,8 @@ class PirateBayAdapter(context: Context) {
 			}
 
 			volleyQueue.add(request)
+		} else {
+			resultCollector.go()
 		}
     }
 
@@ -157,7 +162,10 @@ class PirateBayAdapter(context: Context) {
         val leechersText = htmlItem.substring(leechersStart, htmlItem.indexOf(LEECHERS_END, leechersStart))
         val leechers = Integer.parseInt(leechersText)
 
-        return SearchResult(name, magnetLink, details, size, date, seeders, leechers)
+        return SearchResult(name, magnetLink, null, details, 
+							size, date, seeders, leechers,
+							null
+					)
     }
 
 }

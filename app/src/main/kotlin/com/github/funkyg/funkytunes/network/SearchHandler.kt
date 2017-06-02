@@ -54,6 +54,8 @@ class SearchHandler(val context: Context) {
                 .appendQueryParameter("secret", DISCOGS_API_SECRET)
                 .build()
 
+		Log.i(Tag, uri.toString())
+
         val request = object : StringRequest(Method.GET, uri.toString(), Response.Listener<String> { reply ->
             listener(parseFeed(reply))
         }, Response.ErrorListener { error ->
