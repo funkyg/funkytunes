@@ -43,8 +43,7 @@ class PirateBayAdapter(context: Context) {
     fun search_mirror(retry: Int, album: Album, resultCollector: SearchResultCollector) {
         // Exclude additions like "(Original Motion Picture Soundtrack)" or "(Deluxe Edition)" from
         // the query.
-        val name = album.title.split('(', '[', limit = 2)[0]
-        val query = album.artist + " " + name
+		val query = album.getQuery()
 		if(retry < DOMAINS.size) {
 			val domain = DOMAINS[retry]
 			// Build full URL string
