@@ -82,7 +82,6 @@ class NotificationHandler(private val service: MusicService) : BroadcastReceiver
                 .setContentIntent(contentIntent)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setProgress(0, 0, true)
         service.startForeground(NotificationId, notificationBuilder.build())
         handler.postDelayed(UpdateLoadingNotificationRunnable, 1000)
     }
