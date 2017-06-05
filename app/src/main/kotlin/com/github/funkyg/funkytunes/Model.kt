@@ -8,6 +8,12 @@ data class Album(val title: String, val artist: String, val year: Int?, val imag
         val yearFormat = year?.toString() ?: ""
         return "$artist $name $yearFormat"
 	}
+
+	val titleyear: String
+		get() { 
+			val yearFormat = if (year != null) "("+year.toString()+")" else ""
+			return "$title $yearFormat"
+		}
 }
 
 data class Song(val name: String, val artist: String?, val image: Image, val duration: Int?)

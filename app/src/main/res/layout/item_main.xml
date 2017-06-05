@@ -24,7 +24,7 @@
             android:layout_height="wrap_content"
             android:layout_toEndOf="@+id/image"
             android:layout_marginTop="5dp"
-            android:text="@{album.title}"
+            android:text="@{album.titleyear}"
             tools:text="Name"/>
 
         <TextView
