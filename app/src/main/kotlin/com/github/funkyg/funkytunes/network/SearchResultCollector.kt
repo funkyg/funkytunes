@@ -62,7 +62,7 @@ class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnet
 			Log.i(Tag, "Not readyToGo yet")
 			return
 		}
-		if(watchedRequests.size <= failedRequests + searchResults.size) {
+		if(watchedRequests.size == failedRequests + searchResults.size) {
 			if(searchResults.size > 0) {
 				/* Success - got one or more good results */
 				val bestResult = getBestResult()
