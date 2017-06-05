@@ -47,6 +47,10 @@ class TorrentManager(private val context: Context) : AlertListener {
     }
 
     fun stop() {
+        sessionManager.pause()
+    }
+
+    fun destroy() {
         sessionManager.stop()
     }
 

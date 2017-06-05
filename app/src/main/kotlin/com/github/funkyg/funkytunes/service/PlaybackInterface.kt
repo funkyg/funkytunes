@@ -13,4 +13,5 @@ interface PlaybackInterface {
     fun onResumed() {}
     fun onPlayPrevious() {}
     fun onPlayNext() {}
+    fun onStopped() {}
 }

@@ -11,13 +11,12 @@ import android.support.v4.content.ContextCompat
 import android.support.v7.app.NotificationCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.Target
-import com.github.funkyg.funkytunes.Album
-import com.github.funkyg.funkytunes.FunkyApplication
-import com.github.funkyg.funkytunes.R
-import com.github.funkyg.funkytunes.Song
 import com.github.funkyg.funkytunes.activities.PlayingQueueActivity
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import android.widget.RemoteViews
+import com.github.funkyg.funkytunes.*
+
 
 class NotificationHandler(private val service: MusicService) : BroadcastReceiver(), PlaybackInterface {
 
@@ -28,6 +27,7 @@ class NotificationHandler(private val service: MusicService) : BroadcastReceiver
     private val ActionResume = "com.github.funkyg.funkytunes.play"
     private val ActionPrev  = "com.github.funkyg.funkytunes.prev"
     private val ActionNext  = "com.github.funkyg.funkytunes.next"
+    private val ActionStop  = "com.github.funkyg.funkytunes.destroy"
 
     @Inject lateinit var torrentManager: TorrentManager
     @Inject lateinit var notificationManager: NotificationManagerCompat
@@ -41,6 +41,7 @@ class NotificationHandler(private val service: MusicService) : BroadcastReceiver
         filter.addAction(ActionPause)
         filter.addAction(ActionResume)
         filter.addAction(ActionPrev)
+        filter.addAction(ActionStop)
         service.registerReceiver(this, filter)
 
         // Cancel all notifications to handle the case where the Service was killed and
@@ -61,7 +62,7 @@ class NotificationHandler(private val service: MusicService) : BroadcastReceiver
     }
 
     /**
-     * Immediately stop foreground and allow clearing notification. After {@link #NotificationTimeout},
+     * Immediately destroy foreground and allow clearing notification. After {@link #NotificationTimeout},
      * automatically remove the notification.
      */
     private fun stopNotification() {
@@ -107,6 +108,11 @@ class NotificationHandler(private val service: MusicService) : BroadcastReceiver
             ActionResume -> service.resume()
             ActionPrev   -> service.playPrevious()
             ActionNext   -> service.playNext()
+            ActionStop   -> {
+                service.stop()
+                service.stopForeground(true)
+                return
+            }
         }
         startNotification()
     }
@@ -118,14 +124,18 @@ class NotificationHandler(private val service: MusicService) : BroadcastReceiver
         }
 
         Thread(Runnable {
+            val remoteView = RemoteViews(BuildConfig.APPLICATION_ID, R.layout.player_notification)
+            remoteView.setOnClickPendingIntent(R.id.notificationStop, createPendingIntent(ActionStop))
+            remoteView.setTextViewText(R.id.notificationArtist, currentSong!!.artist)
+            remoteView.setTextViewText(R.id.notificationSongName, currentSong!!.name)
             val notificationBuilder = NotificationCompat.Builder(service)
 
-            notificationBuilder.addAction(R.drawable.ic_skip_previous_black_24dp,
+            notificationBuilder.addAction(R.drawable.ic_skip_previous_white_24dp,
                     service.getString(R.string.previous), createPendingIntent(ActionPrev))
 
             addPlayPauseAction(notificationBuilder)
 
-            notificationBuilder.addAction(R.drawable.ic_skip_next_black_24dp,
+            notificationBuilder.addAction(R.drawable.ic_skip_next_white_24dp,
                     service.getString(R.string.next), createPendingIntent(ActionNext))
 
             val contentIntent = PendingIntent.getActivity(service, RequestCode,
@@ -137,14 +147,17 @@ class NotificationHandler(private val service: MusicService) : BroadcastReceiver
                     .into(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
                     .get()
             notificationBuilder
-                    .setStyle(NotificationCompat.MediaStyle())
+                    .setStyle(NotificationCompat.DecoratedMediaCustomViewStyle())
                     .setColor(ContextCompat.getColor(service, R.color.colorPrimary))
                     .setSmallIcon(R.drawable.ic_notification)
                     .setLargeIcon(icon)
                     .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                     .setContentIntent(contentIntent)
+                    .setShowWhen(false)
                     .setContentTitle(currentSong!!.name)
                     .setContentText(currentSong!!.artist)
+                    .setCustomBigContentView(remoteView)
+                    .setCustomContentView(remoteView)
 
             service.startForeground(NotificationId, notificationBuilder.build())
         }).start()
@@ -152,10 +165,10 @@ class NotificationHandler(private val service: MusicService) : BroadcastReceiver
 
     private fun addPlayPauseAction(builder: NotificationCompat.Builder) {
         if (service.isPlaying()) {
-            builder.addAction(R.drawable.ic_pause_black_24dp, service.getString(R.string.pause),
+            builder.addAction(R.drawable.ic_pause_white_24dp, service.getString(R.string.pause),
                     createPendingIntent(ActionPause))
         } else {
-            builder.addAction(R.drawable.ic_play_arrow_black_24dp, service.getString(R.string.play),
+            builder.addAction(R.drawable.ic_play_arrow_white_24dp, service.getString(R.string.play),
                     createPendingIntent(ActionResume))
         }
     }

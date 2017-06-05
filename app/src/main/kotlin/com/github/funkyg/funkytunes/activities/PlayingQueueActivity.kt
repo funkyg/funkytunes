@@ -66,4 +66,10 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
             binding.empty.visibility = View.GONE
         }
     }
+
+    override fun onStopped() {
+        binding.recycler.visibility = View.GONE
+        binding.progress.visibility = View.GONE
+        binding.empty.visibility = View.VISIBLE
+    }
 }

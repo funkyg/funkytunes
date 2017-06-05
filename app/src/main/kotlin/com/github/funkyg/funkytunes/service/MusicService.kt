@@ -45,7 +45,7 @@ class MusicService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        torrentManager.stop()
+        torrentManager.destroy()
         notificationHandler.stop()
         removePlaybackInterface(notificationHandler)
     }
@@ -93,7 +93,7 @@ class MusicService : Service() {
     }
 
     fun playNext() {
-        if (currentTrack == playlist?.size)
+        if (currentTrack == playlist.size)
             return
 
         playbackListeners.forEach { l -> l.onPlayNext() }
@@ -102,8 +102,16 @@ class MusicService : Service() {
         playTrack()
     }
 
+    fun stop() {
+        mediaPlayer?.stop()
+        torrentManager.stop()
+        playlist.clear()
+        currentSongInfo = null
+        playbackListeners.forEach { l -> l.onStopped() }
+    }
+
     fun playTrack(index: Int) {
-        assert(index >= 0 && index <= playlist!!.size)
+        assert(index >= 0 && index <= playlist.size)
         pause()
         currentTrack = index
         playTrack()
@@ -140,7 +148,7 @@ class MusicService : Service() {
      * Callback when the current song is over, starts the next track.
      */
     private fun songCompleted() {
-        if (currentTrack + 1 >= playlist!!.size) {
+        if (currentTrack + 1 >= playlist.size) {
             playbackListeners.forEach { l -> l.onPaused() }
             stopSelf()
             return
