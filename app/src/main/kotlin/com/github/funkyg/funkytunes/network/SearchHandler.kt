@@ -3,21 +3,15 @@ package com.github.funkyg.funkytunes.network
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import android.widget.Toast
 import com.android.volley.RequestQueue
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.github.funkyg.funkytunes.Album
 import com.github.funkyg.funkytunes.FunkyApplication
 import com.github.funkyg.funkytunes.Image
-import com.github.funkyg.funkytunes.R
 import com.github.salomonbrys.kotson.*
-import com.google.common.io.CharStreams
-import com.google.common.io.Files
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
-import java.io.IOException
-import java.io.InputStreamReader
 import java.util.*
 import javax.inject.Inject
 
@@ -34,9 +28,11 @@ class SearchHandler(val context: Context) {
             .registerTypeAdapter<Album> {
                 deserialize {
                     // HACK: Apparently Discogs does not return artist and title seperately, so we
-                    //       have to extract them this way.
+                    //       have to extract them this way. Also, some results dont have a year.
+                    val year by it.json.byNullableInt("year")
                     Album(it.json["title"].string.split(" - ")[0],
                             it.json["title"].string.split(" - ")[1],
+                            year,
                             Image(it.json["thumb"].string))
                 }
             }

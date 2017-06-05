@@ -17,12 +17,16 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFutureTask
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
+import java.lang.Exception
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.inject.Inject
 
 class ChartsFetcher(context: Context) {
 
     private val AlbumFeed = "https://itunes.apple.com/us/rss/topalbums/limit=200/json"
     private val Tag = "ChartsFetcher"
+    private val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZ")
 
     @Inject lateinit var volleyQueue: RequestQueue
 
@@ -52,8 +56,19 @@ class ChartsFetcher(context: Context) {
     private val Gson = GsonBuilder()
             .registerTypeAdapter<Album> {
                 deserialize {
+                    val year = try {
+                        val date = DATE_FORMAT.parse(it.json["im:releaseDate"]["label"].string)
+                        val calendar = Calendar.getInstance()
+                        calendar.time = date
+                        calendar.get(Calendar.YEAR)
+                    } catch (e: Exception) {
+                        Log.w(Tag, e)
+                        null
+                    }
+
                     Album(it.json["im:name"]["label"].string,
                             it.json["im:artist"]["label"].string,
+                            year,
                             it.context.deserialize<List<Image>>(it.json["im:image"].array).last())
                 }
             }

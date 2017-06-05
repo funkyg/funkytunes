@@ -1,12 +1,12 @@
 package com.github.funkyg.funkytunes
 
-data class Album(val title: String, val artist: String, val image: Image) {
+data class Album(val title: String, val artist: String, val year: Int?, val image: Image) {
 	fun getQuery(): String {
         // Exclude additions like "(Original Motion Picture Soundtrack)" or "(Deluxe Edition)" from
         // the query.
         val name = title.split('(', '[', limit = 2)[0]
-        val query = artist + " " + name
-		return query
+        val yearFormat = year?.toString() ?: ""
+        return "$artist $name $yearFormat"
 	}
 }
 
