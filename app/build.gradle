@@ -16,6 +16,12 @@ android {
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def apkName = 'funkytunes-' + variant.versionName + '.apk';
+            output.outputFile = new File(output.outputFile.parentFile, apkName)
+        }
+    }
 }
 
 dependencies {
