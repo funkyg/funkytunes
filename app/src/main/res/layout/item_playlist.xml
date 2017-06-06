@@ -29,14 +29,6 @@
 			android:src="@drawable/ic_play_arrow_accent_24dp"
 			android:id="@+id/songplaying"/>
 
-		<TextView
-			android:id="@+id/songstatus"
-			android:layout_width="wrap_content" 
-			android:layout_height="wrap_content" 
-			android:text="!!TEST!!"
-			android:background="#ff8888"
-			android:gravity="right"/>
-
         <TextView
             android:id="@+id/title"
             android:layout_width="wrap_content"

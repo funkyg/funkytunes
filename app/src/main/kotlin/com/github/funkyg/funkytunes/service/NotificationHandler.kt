@@ -92,7 +92,7 @@ class NotificationHandler(private val service: MusicService) : BroadcastReceiver
         handler.removeCallbacks(UpdateLoadingNotificationRunnable)
     }
 
-    override fun onPlaySong(song: Song) {
+    override fun onPlaySong(song: Song, index: Int) {
         currentSong = song
         startNotification()
     }

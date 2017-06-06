@@ -54,7 +54,7 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
         finish()
     }
 
-	override fun onPlayTrack(index: Int) {
+	override fun onPlaySong(song: Song, index: Int) {
 		for(binding in albumBindings.values) {
 			binding.songplaying.visibility = View.GONE
 		}
@@ -70,12 +70,6 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
         albumBindings.get(index)?.songplaying?.visibility = View.GONE
         albumBindings.get(index)?.songloading?.visibility = View.VISIBLE
 		Log.i(Tag, "Enqueued track $index")
-	}
-
-	override fun onPaused() {
-		for(binding in albumBindings.values) {
-			binding.songplaying.visibility = View.GONE
-		}
 	}
 
     override fun onPlaylistLoaded(playlist: List<Song>) {

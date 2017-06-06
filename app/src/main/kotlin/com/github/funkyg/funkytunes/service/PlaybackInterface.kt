@@ -8,7 +8,7 @@ interface PlaybackInterface {
     fun onPlayAlbum(album: Album) {}
     fun onCancelAlbum() {}
     fun onPlaylistLoaded(playlist: List<Song>) {}
-    fun onPlaySong(song: Song) {}
+    fun onPlaySong(song: Song, index: Int) {}
     fun onPaused() {}
     fun onResumed() {}
     fun onPlayPrevious() {}

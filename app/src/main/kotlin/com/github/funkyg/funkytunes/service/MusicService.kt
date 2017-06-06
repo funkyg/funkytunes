@@ -107,7 +107,6 @@ class MusicService : Service() {
         pause()
         currentTrack = index
         playTrack()
-        playbackListeners.forEach { l -> l.onPlayTrack(index) }
         startService(Intent(this, MusicService::class.java))
     }
 
@@ -115,6 +114,11 @@ class MusicService : Service() {
      * Requests {@link #currentTrack} as torrent, and starts playing it on FILE_COMPLETED.
      */
     private fun playTrack() {
+		Handler(Looper.getMainLooper()).post({
+			playbackListeners.forEach { l ->
+				l.onEnqueueTrack(currentTrack)
+			}
+		})
         torrentManager.requestSong(currentTrack, { file ->
             Log.i(Tag, "Playing track " + file.name)
             mediaPlayer = MediaPlayer.create(this, Uri.fromFile(file))
@@ -130,16 +134,11 @@ class MusicService : Service() {
 
             Handler(Looper.getMainLooper()).post({
                 playbackListeners.forEach { l ->
-                    l.onPlaySong(currentSongInfo!!)
+                    l.onPlaySong(currentSongInfo!!, currentTrack)
                     l.onResumed()
                 }
             })
         })
-		Handler(Looper.getMainLooper()).post({
-			playbackListeners.forEach { l ->
-				l.onEnqueueTrack(currentTrack)
-			}
-		})
     }
 
     /**

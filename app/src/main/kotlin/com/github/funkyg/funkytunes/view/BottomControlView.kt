@@ -37,7 +37,7 @@ class BottomControlView(context: Context, attrs: AttributeSet?, defStyleAttr: In
         logo.setOnClickListener(listener)
         textHolder.setOnClickListener(listener)
 
-        musicService.getCurrentSong()?.let { s -> onPlaySong(s) }
+        musicService.getCurrentSong()?.let { s -> onPlaySong(s, -1) }
         if (musicService.isPlaying())
             onResumed()
         else
@@ -49,7 +49,7 @@ class BottomControlView(context: Context, attrs: AttributeSet?, defStyleAttr: In
         musicService.removePlaybackInterface(this)
     }
 
-    override fun onPlaySong(song: Song) {
+    override fun onPlaySong(song: Song, index: Int) {
         visibility = View.VISIBLE
         progressBar.progress = musicService.getSongProgress()!!
         progressBar.max = song.duration!!
