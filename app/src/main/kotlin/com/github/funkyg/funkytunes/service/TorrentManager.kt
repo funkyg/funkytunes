@@ -1,6 +1,7 @@
 package com.github.funkyg.funkytunes.service
 
 import android.content.Context
+import android.net.ConnectivityManager
 import android.os.Handler
 import android.util.Log
 import com.frostwire.jlibtorrent.*
@@ -39,12 +40,32 @@ class TorrentManager(private val context: Context) : AlertListener {
 
     init {
         (context.applicationContext as FunkyApplication).component.inject(this)
+
+		val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+		val networkInfo = connectivityManager.activeNetworkInfo
+		var vpnConnected = false
+
+		for (net in connectivityManager.getAllNetworks()) {
+			val caps = connectivityManager.getNetworkCapabilities(net)
+			if (caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+				vpnConnected = true
+			}
+		}
+
+		// todo: don't sessionManager.start() if vpnConnected=false and protection enabled in settings
+
+		Log.i(Tag, "VPN Connected: $vpnConnected")
+
         sessionManager.start()
         sessionManager.addListener(this)
 
-        // Disable all seeding. We should handle this more intelligently, eg seed only on wifi,
-        // and/or add a setting.
-        sessionManager.maxActiveSeeds(0)
+        // Disable all seeding on Wi-Fi
+		if (networkInfo.getType() != ConnectivityManager.TYPE_WIFI) {
+			sessionManager.maxActiveSeeds(0)
+			Log.i(Tag, "Seeding disabled")
+		} else {
+			Log.i(Tag, "Seeding enabled on Wi-Fi")
+		}
     }
 
     fun stop() {
