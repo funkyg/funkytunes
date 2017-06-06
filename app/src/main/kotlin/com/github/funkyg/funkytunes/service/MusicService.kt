@@ -107,6 +107,7 @@ class MusicService : Service() {
         pause()
         currentTrack = index
         playTrack()
+        playbackListeners.forEach { l -> l.onPlayTrack(index) }
         startService(Intent(this, MusicService::class.java))
     }
 
@@ -134,6 +135,11 @@ class MusicService : Service() {
                 }
             })
         })
+		Handler(Looper.getMainLooper()).post({
+			playbackListeners.forEach { l ->
+				l.onEnqueueTrack(currentTrack)
+			}
+		})
     }
 
     /**

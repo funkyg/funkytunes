@@ -3,6 +3,7 @@ package com.github.funkyg.funkytunes.activities
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
+import android.util.Log
 import android.view.View
 import com.github.funkyg.funkytunes.Album
 import com.github.funkyg.funkytunes.BR
@@ -17,7 +18,10 @@ import com.github.nitrico.lastadapter.LastAdapter
 
 class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
 
+	private val Tag = "PlayingQueueActivity"
+
     private lateinit var binding: ActivityPlayingQueueBinding
+	private val albumBindings = mutableMapOf<Int, ItemPlaylistBinding>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +38,7 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
         super.onDestroy()
         service!!.removePlaybackInterface(this)
         service?.removePlaybackInterface(binding.bottomControl.root as PlaybackInterface)
+		albumBindings.clear()
     }
 
     override fun onPlayAlbum(album: Album) {
@@ -45,13 +50,42 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
     }
 
     override fun onCancelAlbum() {
+		albumBindings.clear()
         finish()
     }
 
+	override fun onPlayTrack(index: Int) {
+		for(binding in albumBindings.values) {
+			binding.songplaying.visibility = View.GONE
+		}
+        albumBindings.get(index)?.songplaying?.visibility = View.VISIBLE
+        albumBindings.get(index)?.songloading?.visibility = View.GONE
+		Log.i(Tag, "Playing track $index")
+	}
+
+	override fun onEnqueueTrack(index: Int) {
+		for(binding in albumBindings.values) {
+			binding.songloading.visibility = View.GONE
+		}
+        albumBindings.get(index)?.songplaying?.visibility = View.GONE
+        albumBindings.get(index)?.songloading?.visibility = View.VISIBLE
+		Log.i(Tag, "Enqueued track $index")
+	}
+
+	override fun onPaused() {
+		for(binding in albumBindings.values) {
+			binding.songplaying.visibility = View.GONE
+		}
+	}
+
     override fun onPlaylistLoaded(playlist: List<Song>) {
         runOnUiThread {
+			albumBindings.clear()
+
             val itemBinder = object : ItemType<ItemPlaylistBinding>(R.layout.item_playlist) {
                 override fun onBind(holder: Holder<ItemPlaylistBinding>) {
+					albumBindings[holder.adapterPosition] = holder.binding
+
                     holder.binding.root.setOnClickListener {
                         service!!.playTrack(holder.adapterPosition)
                     }
