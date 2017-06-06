@@ -151,6 +151,7 @@ class MusicService : Service() {
      * Callback when the current song is over, starts the next track.
      */
     private fun songCompleted() {
+		Log.i(Tag, "Song completed")
         if (currentTrack + 1 >= playlist!!.size) {
             playbackListeners.forEach { l -> l.onPaused() }
             stopSelf()
