@@ -30,12 +30,13 @@ class SearchResult(val title: String, val magnetLink: String, val torrentUrl: St
  * Calls a callback when all results are complete
  */
 
-class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnetListener: (String)->Unit, val errorListener: (Int) -> Unit) {
+class SearchResultCollector(val numAdapters: Int, val torrentListener: (TorrentInfo)->Unit, val magnetListener: (String)->Unit, val errorListener: (Int) -> Unit) {
 	private val Tag = "ResultCollector"
 	private val watchedRequests = arrayListOf<String>()
 	private var failedRequests = 0
 	private val searchResults = arrayListOf<SearchResult>()
-	private var readyToGo = false
+	private var readyToGo = 0
+	private var wasComplete = false
 
 	fun watchRequest(req: Request<TorrentInfo>) {
 		watchedRequests.add(req.getUrl())
@@ -57,12 +58,19 @@ class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnet
 		return eligibleTorrents[0]
 	}
 
-	private fun checkComplete() {
-		if(!readyToGo) {
-			Log.i(Tag, "Not readyToGo yet")
+	private fun checkComplete(force: Boolean = false) {
+		if(readyToGo < numAdapters) {
+			Log.i(Tag, "Not readyToGo yet. Force: $force, readyToGo: $readyToGo, all: ${watchedRequests.size}, fail $failedRequests, results ${searchResults.size}")
 			return
 		}
-		if(watchedRequests.size == failedRequests + searchResults.size) {
+
+		if(wasComplete) {
+			Log.i(Tag, "checkComplete called on already completed result")
+			return
+		}
+
+		if(watchedRequests.size <= failedRequests + searchResults.size || force) {
+			Log.i(Tag, "Ckecking results. Force: $force, readyToGo: $readyToGo, all: ${watchedRequests.size}, fail $failedRequests, results ${searchResults.size}")
 			if(searchResults.size > 0) {
 				/* Success - got one or more good results */
 				val bestResult = getBestResult()
@@ -82,6 +90,7 @@ class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnet
 					errorListener(R.string.error_no_torrent_found)
 				}
 			}
+			wasComplete = true
 		} else {
 			val totalCompleted = failedRequests + searchResults.size
 			Log.i(Tag, "${totalCompleted} / ${watchedRequests.size} - ${searchResults.size} usable")
@@ -104,8 +113,13 @@ class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnet
 	/* Additional lock - no listeners will be called before go() is called */
 	/* Call it when all the requests have been added in the last adapter */
 	fun go() {
-		readyToGo = true
+		readyToGo++
 		checkComplete()
+	}
+
+	fun forceGo() {
+		readyToGo = numAdapters
+		checkComplete(true)
 	}
 
 	fun notify429() {

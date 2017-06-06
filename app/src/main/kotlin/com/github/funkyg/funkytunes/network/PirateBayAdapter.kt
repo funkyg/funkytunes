@@ -58,8 +58,8 @@ class PirateBayAdapter(context: Context) {
 								resultCollector.addResult(r)
 							   }   
 							 }
-					true  -> resultCollector.addFailed()
 				}
+				Log.i(Tag, "GO()!!!!")
 				resultCollector.go()
 			}, Response.ErrorListener { error ->
 				search_mirror(retry + 1, album, resultCollector)
@@ -74,6 +74,7 @@ class PirateBayAdapter(context: Context) {
 
 			volleyQueue.add(request)
 		} else {
+			Log.i(Tag, "GO()!!!! [2]")
 			resultCollector.go()
 		}
     }

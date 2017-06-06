@@ -1,6 +1,7 @@
 package com.github.funkyg.funkytunes.service
 
 import android.content.Context
+import android.os.Handler
 import android.util.Log
 import com.frostwire.jlibtorrent.*
 import com.frostwire.jlibtorrent.alerts.Alert
@@ -36,6 +37,8 @@ class TorrentManager(private val context: Context) : AlertListener {
     private var fileProgressListener: Pair<Int, (Int, Int) -> Unit>? = null
     private var errorListener: ((Int) -> Unit)? = null
 	private var lastProgressUpdate = System.currentTimeMillis()
+	private lateinit var torrentTimeoutHandler: Handler
+	private lateinit var torrentTimeoutRunnable: Runnable
 
     init {
         (context.applicationContext as FunkyApplication).component.inject(this)
@@ -188,12 +191,21 @@ class TorrentManager(private val context: Context) : AlertListener {
         }
 
 		val resultCollector = SearchResultCollector(
+				2, // number of adapters
 				this::startTorrent,
 				this::startMagnet,
 				errorListener)
 
         skyTorrentsAdapter.search(album, resultCollector)
         pirateBayAdapter.search(album, resultCollector)
+
+		// Force harvesting results after 10s even if some requests have not finished
+		torrentTimeoutHandler = Handler()
+		torrentTimeoutRunnable = Runnable {
+			Log.i(Tag, "Forcing go() after 10 seconds")
+			resultCollector.forceGo()
+		}
+		torrentTimeoutHandler.postDelayed(torrentTimeoutRunnable, 10000)
     }
 
     fun requestSong(position: Int, listener: (File) -> Unit, progressListener: (Int, Int) -> Unit) {
