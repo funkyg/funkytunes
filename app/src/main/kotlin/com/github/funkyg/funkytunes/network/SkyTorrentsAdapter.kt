@@ -131,8 +131,11 @@ class SkyTorrentsAdapter(context: Context) {
 					}
 					torrentRequest.tag = query
 					resultCollector.watchRequest(torrentRequest)
+					Log.i(Tag, "Added torrent request to watch ${item.torrentUrl}")
 					volleyQueue.add(torrentRequest)
 				}
+				Log.i(Tag, "GO()!!!!")
+				resultCollector.go()
 			}, Response.ErrorListener { error ->
 				Log.i(Tag, error.message ?: "(No message from volley)")
 				search_mirror(retry + 1, album, resultCollector)
@@ -145,6 +148,9 @@ class SkyTorrentsAdapter(context: Context) {
 			}
 
 			volleyQueue.add(request)
+		} else {
+			Log.i(Tag, "GO()!!!! [err]")
+			resultCollector.go()
 		}
     }
 

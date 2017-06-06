@@ -163,6 +163,7 @@ class TorrentManager(private val context: Context) : AlertListener {
         }
 
 		val resultCollector = SearchResultCollector(
+				2, // number of adapters
 				this::startTorrent,
 				this::startMagnet,
 				errorListener)
