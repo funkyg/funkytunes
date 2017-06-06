@@ -36,6 +36,7 @@ class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnet
 	private var failedRequests = 0
 	private val searchResults = arrayListOf<SearchResult>()
 	private var readyToGo = false
+	private var wasComplete = false
 
 	fun watchRequest(req: Request<TorrentInfo>) {
 		watchedRequests.add(req.getUrl())
@@ -57,12 +58,18 @@ class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnet
 		return eligibleTorrents[0]
 	}
 
-	private fun checkComplete() {
+	private fun checkComplete(force: Boolean = false) {
 		if(!readyToGo) {
 			Log.i(Tag, "Not readyToGo yet")
 			return
 		}
-		if(watchedRequests.size == failedRequests + searchResults.size) {
+
+		if(wasComplete) {
+			Log.i(Tag, "checkComplete called on already completed result")
+			return
+		}
+
+		if(watchedRequests.size <= failedRequests + searchResults.size || force) {
 			if(searchResults.size > 0) {
 				/* Success - got one or more good results */
 				val bestResult = getBestResult()
@@ -82,6 +89,7 @@ class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnet
 					errorListener(R.string.error_no_torrent_found)
 				}
 			}
+			wasComplete = true
 		} else {
 			val totalCompleted = failedRequests + searchResults.size
 			Log.i(Tag, "${totalCompleted} / ${watchedRequests.size} - ${searchResults.size} usable")
@@ -106,6 +114,11 @@ class SearchResultCollector(val torrentListener: (TorrentInfo)->Unit, val magnet
 	fun go() {
 		readyToGo = true
 		checkComplete()
+	}
+
+	fun forceGo() {
+		readyToGo = true
+		checkComplete(true)
 	}
 
 	fun notify429() {
