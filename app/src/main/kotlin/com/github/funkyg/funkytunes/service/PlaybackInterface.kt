@@ -13,6 +13,6 @@ interface PlaybackInterface {
     fun onResumed() {}
     fun onPlayPrevious() {}
     fun onPlayNext() {}
-	fun onPlayTrack(index: Int) {}
 	fun onEnqueueTrack(index: Int) {}
+	fun onProgress(index: Int, progress: Int) {}
 }

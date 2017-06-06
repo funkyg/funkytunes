@@ -138,7 +138,13 @@ class MusicService : Service() {
                     l.onResumed()
                 }
             })
-        })
+        }, {index: Int, progress: Int -> 
+            Handler(Looper.getMainLooper()).post({
+                playbackListeners.forEach { l ->
+                    l.onProgress(index, progress)
+                }
+            })
+		})
     }
 
     /**

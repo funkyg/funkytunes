@@ -54,6 +54,11 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
         finish()
     }
 
+	override fun onProgress(index: Int, progress: Int) {
+		albumBindings.get(index)?.songloading?.setIndeterminate(false)
+		albumBindings.get(index)?.songloading?.setProgress(progress)
+	}
+
 	override fun onPlaySong(song: Song, index: Int) {
 		for(binding in albumBindings.values) {
 			binding.songplaying.visibility = View.GONE
