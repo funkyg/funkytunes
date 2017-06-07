@@ -1,8 +1,8 @@
 buildscript {
-    ext.kotlin_version = '1.1.1'
+    ext.kotlin_version = '1.1.2-4'
     ext.support_version = '25.3.1'
     ext.build_tools_version = '2.3.1'
-    ext.jlibtorrent_version = '1.2.0.6'
+    ext.jlibtorrent_version = '1.2.0.9-RC5'
     repositories {
         jcenter()
     }
