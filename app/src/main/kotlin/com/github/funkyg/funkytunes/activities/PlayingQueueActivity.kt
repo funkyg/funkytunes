@@ -74,6 +74,7 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
 		}
         albumBindings.get(index)?.songplaying?.visibility = View.GONE
         albumBindings.get(index)?.songloading?.visibility = View.VISIBLE
+        albumBindings.get(index)?.songloading?.setIndeterminate(true)
 		Log.i(Tag, "Enqueued track $index")
 	}
 
