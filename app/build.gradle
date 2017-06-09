@@ -40,10 +40,12 @@ dependencies {
     compile "com.frostwire:jlibtorrent-android-x86:$jlibtorrent_version"
     compile 'com.google.dagger:dagger:2.10'
     kapt 'com.google.dagger:dagger-compiler:2.10'
+    compile 'com.github.lzyzsd:circleprogress:1.2.1'
 }
 
 kapt.generateStubs = true
 
 repositories {
     mavenCentral()
+	maven { url "https://jitpack.io" }
 }
