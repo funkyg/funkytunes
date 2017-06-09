@@ -2,6 +2,7 @@ package com.github.funkyg.funkytunes.service
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities 
 import android.os.Handler
 import android.util.Log
 import com.frostwire.jlibtorrent.*
