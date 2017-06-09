@@ -2,15 +2,20 @@ package com.github.funkyg.funkytunes.service
 
 import android.app.Service
 import android.content.Intent
+import android.content.IntentFilter
 import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Binder
 import android.os.Handler
 import android.os.Looper
+import android.telephony.TelephonyManager
 import android.util.Log
 import android.widget.Toast
-import com.github.funkyg.funkytunes.*
+import com.github.funkyg.funkytunes.Album
+import com.github.funkyg.funkytunes.CallReceiver
+import com.github.funkyg.funkytunes.FunkyApplication
+import com.github.funkyg.funkytunes.Song
 import javax.inject.Inject
 
 class MusicService : Service() {
@@ -19,6 +24,7 @@ class MusicService : Service() {
 
     @Inject lateinit var torrentManager: TorrentManager
     private val notificationHandler by lazy { NotificationHandler(this) }
+    private val callReceiver = CallReceiver(this)
     private var mediaPlayer: MediaPlayer? = null
     private val playbackListeners = ArrayList<PlaybackInterface>()
     private var playedAlbum: Album? = null
@@ -36,6 +42,7 @@ class MusicService : Service() {
         super.onCreate()
         (applicationContext as FunkyApplication).component.inject(this)
         addPlaybackInterface(notificationHandler)
+        registerReceiver(callReceiver, IntentFilter(TelephonyManager.ACTION_PHONE_STATE_CHANGED))
 
         // Delete all files, so we don't run out of space.
         // This should be replaced by proper cache handling, to discard files only if a certain
@@ -48,10 +55,13 @@ class MusicService : Service() {
         torrentManager.stop()
         notificationHandler.stop()
         removePlaybackInterface(notificationHandler)
+        unregisterReceiver(callReceiver)
     }
 
     fun play(album: Album) {
-        pause()
+        if (isPlaying()) {
+            pause()
+        }
         playbackListeners.forEach { l -> l.onPlayAlbum(album) }
         playlist.clear()
         playedAlbum = album

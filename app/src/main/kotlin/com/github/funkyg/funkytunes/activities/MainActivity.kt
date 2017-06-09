@@ -1,11 +1,15 @@
 package com.github.funkyg.funkytunes.activities
 
+import android.Manifest
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.databinding.DataBindingUtil
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.support.v4.content.ContextCompat
+import android.support.v4.app.ActivityCompat
 import android.support.v4.view.MenuItemCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.SearchView
@@ -50,6 +54,7 @@ class MainActivity : BaseActivity(), SearchView.OnQueryTextListener {
 
         chartsFetcher.fetchAppleAlbumFeed { f -> showAlbums(f) }
         checkUpdates()
+        checkCallReceiverPermission()
 
 		searchDebounceHandler = Handler()
 		searchDebounceRunnable = Runnable {
@@ -170,5 +175,12 @@ class MainActivity : BaseActivity(), SearchView.OnQueryTextListener {
                         .show()
             }
         })
+    }
+
+    private fun checkCallReceiverPermission() {
+        val permissionStatus = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE)
+        if (permissionStatus != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_PHONE_STATE), 1);
+        }
     }
 }
