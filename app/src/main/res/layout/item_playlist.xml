@@ -67,7 +67,7 @@
                 android:layout_height="32dp"
                 android:layout_alignParentRight="true"
                 android:layout_alignParentTop="true"
-				custom:donut_finished_stroke_width="1dp"
+				donut_finished_stroke_width="1dp"
 				donut_unfinished_stroke_width="1dp"
 				donut_text_color="#00000000"
                 android:visibility="gone" />
