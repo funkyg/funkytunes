@@ -69,9 +69,7 @@ class NotificationHandler(private val service: MusicService) : BroadcastReceiver
         handler.postDelayed(StopForegroundRunnable, NotificationTimeout)
     }
 
-    override fun onPlayAlbum(album: Album) {
-        updateLoadingNotification()
-    }
+    override fun onPlayAlbum(album: Album) = updateLoadingNotification()
 
     private fun updateLoadingNotification() {
         val contentIntent = PendingIntent.getActivity(service, RequestCode,
@@ -94,12 +92,15 @@ class NotificationHandler(private val service: MusicService) : BroadcastReceiver
 
     override fun onPlaySong(song: Song, index: Int) {
         currentSong = song
-        startNotification()
+        updateNotification()
     }
 
     override fun onPaused() {
+        updateNotification()
         stopNotification()
     }
+
+    override fun onResumed() = updateNotification()
 
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
@@ -108,10 +109,9 @@ class NotificationHandler(private val service: MusicService) : BroadcastReceiver
             ActionPrev   -> service.playPrevious()
             ActionNext   -> service.playNext()
         }
-        startNotification()
     }
 
-    private fun startNotification() {
+    private fun updateNotification() {
         handler.removeCallbacks(UpdateLoadingNotificationRunnable)
         if (service.isPlaying()) {
             handler.removeCallbacks(StopForegroundRunnable)
@@ -131,8 +131,8 @@ class NotificationHandler(private val service: MusicService) : BroadcastReceiver
             val contentIntent = PendingIntent.getActivity(service, RequestCode,
                     Intent(service, PlayingQueueActivity::class.java), PendingIntent.FLAG_CANCEL_CURRENT)
 
-            val icon = Glide.with(service).
-                    load(currentSong!!.image.url)
+            val icon = Glide.with(service)
+                    .load(currentSong!!.image.url)
                     .asBitmap()
                     .into(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
                     .get()

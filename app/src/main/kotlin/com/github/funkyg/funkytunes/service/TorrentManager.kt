@@ -4,20 +4,19 @@ import android.content.Context
 import android.os.Handler
 import android.util.Log
 import com.frostwire.jlibtorrent.*
+import com.frostwire.jlibtorrent.alerts.AddTorrentAlert
 import com.frostwire.jlibtorrent.alerts.Alert
 import com.frostwire.jlibtorrent.alerts.AlertType
 import com.frostwire.jlibtorrent.alerts.BlockFinishedAlert
 import com.frostwire.jlibtorrent.alerts.FileCompletedAlert
-import com.frostwire.jlibtorrent.alerts.TorrentAddedAlert
 import com.github.funkyg.funkytunes.Album
 import com.github.funkyg.funkytunes.FunkyApplication
 import com.github.funkyg.funkytunes.R
 import com.github.funkyg.funkytunes.network.PirateBayAdapter
-import com.github.funkyg.funkytunes.network.SkyTorrentsAdapter
 import com.github.funkyg.funkytunes.network.SearchResultCollector
+import com.github.funkyg.funkytunes.network.SkyTorrentsAdapter
 import com.google.common.io.Files
 import java.io.File
-import java.text.NumberFormat
 import javax.inject.Inject
 
 class TorrentManager(private val context: Context) : AlertListener {
@@ -54,15 +53,15 @@ class TorrentManager(private val context: Context) : AlertListener {
         sessionManager.stop()
     }
 
-    override fun types() = intArrayOf(AlertType.TORRENT_ADDED.swig(), AlertType.FILE_COMPLETED.swig(), AlertType.BLOCK_FINISHED.swig())
+    override fun types() = intArrayOf(AlertType.ADD_TORRENT.swig(), AlertType.FILE_COMPLETED.swig(), AlertType.BLOCK_FINISHED.swig())
 
     override fun alert(alert: Alert<*>) {
 		try {
 			val type = alert.type()
 
 			when (type) {
-				AlertType.TORRENT_ADDED -> {
-					val handle = (alert as TorrentAddedAlert).handle()
+				AlertType.ADD_TORRENT -> {
+					val handle = (alert as AddTorrentAlert).handle()
 					handle.resume()
 					handle.prioritizeFiles(getTorrentFiles(handle).map{ Priority.IGNORE }.toTypedArray())
 					files = getTorrentFiles(handle)

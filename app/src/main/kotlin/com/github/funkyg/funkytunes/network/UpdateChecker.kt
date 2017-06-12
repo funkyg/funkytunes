@@ -34,7 +34,7 @@ class UpdateChecker(val context: Context) {
             return
 
         val request = StringRequest(Request.Method.GET, UPDATE_URL, Response.Listener<String> { reply ->
-            val available = Gson().fromJson(reply, JsonObject::class.java).get("name").asString
+            val available = Gson().fromJson(reply, JsonObject::class.java).get("tag_name").asString
             val current = context.packageManager.getPackageInfo(context.packageName, 0).versionName
             if (available != current) {
                 updateListener.updateAvailable()
