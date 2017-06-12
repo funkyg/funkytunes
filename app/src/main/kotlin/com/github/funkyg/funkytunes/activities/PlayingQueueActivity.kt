@@ -12,7 +12,7 @@ import com.github.funkyg.funkytunes.Song
 import com.github.funkyg.funkytunes.databinding.ActivityPlayingQueueBinding
 import com.github.funkyg.funkytunes.databinding.ItemPlaylistBinding
 import com.github.funkyg.funkytunes.service.PlaybackInterface
-import com.github.lzyzsd.circleprogress.DonutProgress;
+import com.github.lzyzsd.circleprogress.DonutProgress
 import com.github.nitrico.lastadapter.Holder
 import com.github.nitrico.lastadapter.ItemType
 import com.github.nitrico.lastadapter.LastAdapter
@@ -57,11 +57,13 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
     }
 
 	override fun onProgress(index: Int, progress: Int) {
-        albumBindings.get(index)?.songplaying?.visibility = View.GONE
-        albumBindings.get(index)?.songloading?.visibility = View.GONE
+        if(albumBindings.get(index)?.songplaying?.visibility != View.VISIBLE) {
+			albumBindings.get(index)?.songplaying?.visibility = View.GONE
+			albumBindings.get(index)?.songloading?.visibility = View.GONE
 
-		albumBindings.get(index)?.songprogress?.setProgress(progress.toFloat())
-        albumBindings.get(index)?.songprogress?.visibility = View.VISIBLE
+			albumBindings.get(index)?.songprogress?.setProgress(progress.toFloat())
+			albumBindings.get(index)?.songprogress?.visibility = View.VISIBLE
+		}
 	}
 
 	override fun onPlaySong(song: Song, index: Int) {

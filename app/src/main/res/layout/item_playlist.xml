@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+	xmlns:custom="http://schemas.android.com/apk/res-auto"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
@@ -67,9 +68,10 @@
                 android:layout_height="32dp"
                 android:layout_alignParentRight="true"
                 android:layout_alignParentTop="true"
-				donut_finished_stroke_width="1dp"
-				donut_unfinished_stroke_width="1dp"
-				donut_text_color="#00000000"
+				custom:donut_finished_stroke_width="3dp"
+				custom:donut_unfinished_stroke_width="3dp"
+				custom:donut_text_color="#00000000"
+				custom:donut_finished_color="#FE4083"
                 android:visibility="gone" />
 
         </RelativeLayout>
