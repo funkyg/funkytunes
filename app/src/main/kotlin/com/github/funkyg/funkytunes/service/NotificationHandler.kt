@@ -123,9 +123,9 @@ class NotificationHandler(private val service: MusicService) : BroadcastReceiver
             handler.removeCallbacks(StopForegroundRunnable)
         }
 
-		if (currentSong == null) {
-			return
-		}
+        if (currentSong == null) {
+            return
+        }
 
         Thread(Runnable {
             val remoteView = RemoteViews(BuildConfig.APPLICATION_ID, R.layout.player_notification)

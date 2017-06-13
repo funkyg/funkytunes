@@ -132,11 +132,11 @@ class MusicService : Service() {
      * Requests {@link #currentTrack} as torrent, and starts playing it on FILE_COMPLETED.
      */
     private fun playTrack() {
-		Handler(Looper.getMainLooper()).post({
-			playbackListeners.forEach { l ->
-				l.onEnqueueTrack(currentTrack)
-			}
-		})
+        Handler(Looper.getMainLooper()).post({
+            playbackListeners.forEach { l ->
+                l.onEnqueueTrack(currentTrack)
+            }
+        })
         torrentManager.requestSong(currentTrack, { file ->
             Log.i(Tag, "Playing track " + file.name)
             mediaPlayer = MediaPlayer.create(this, Uri.fromFile(file))
@@ -147,11 +147,11 @@ class MusicService : Service() {
             mmr.setDataSource(file.absolutePath)
             val title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE) ?: ""
             val artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST) ?: ""
-			val song = playlist!![currentTrack]
-			song.name = title
-			song.artist = artist
-			song.duration = mediaPlayer?.duration?.div(1000)
-			currentSongInfo = song
+            val song = playlist!![currentTrack]
+            song.name = title
+            song.artist = artist
+            song.duration = mediaPlayer?.duration?.div(1000)
+            currentSongInfo = song
 
             Handler(Looper.getMainLooper()).post({
                 playbackListeners.forEach { l ->
@@ -165,7 +165,7 @@ class MusicService : Service() {
                     l.onProgress(index, progress)
                 }
             })
-		})
+        })
     }
 
     /**

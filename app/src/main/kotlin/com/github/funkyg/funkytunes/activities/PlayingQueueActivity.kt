@@ -20,12 +20,12 @@ import com.github.nitrico.lastadapter.LastAdapter
 
 class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
 
-	private val Tag = "PlayingQueueActivity"
+    private val Tag = "PlayingQueueActivity"
 
     private lateinit var binding: ActivityPlayingQueueBinding
 
-	private var adapter: LastAdapter? = null
-	private var currentPlaylist: List<Song>? = null
+    private var adapter: LastAdapter? = null
+    private var currentPlaylist: List<Song>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,67 +56,67 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
         finish()
     }
 
-	override fun onProgress(index: Int, progress: Int) {
-		val playlist: List<Song>? = currentPlaylist
-		if (playlist == null) {
-			Log.v(Tag, "Progress received when playlist is null")
-			return
-		}
-		val song = playlist[index]
-		if (!song.isPlaying) {
-			song.isPlaying = false
-			song.progress = progress.toInt()
+    override fun onProgress(index: Int, progress: Int) {
+        val playlist: List<Song>? = currentPlaylist
+        if (playlist == null) {
+            Log.v(Tag, "Progress received when playlist is null")
+            return
+        }
+        val song = playlist[index]
+        if (!song.isPlaying) {
+            song.isPlaying = false
+            song.progress = progress.toInt()
 
-			//Log.v(Tag, "Progress[$index] = $progress song=$song")
-			runOnUiThread {
-				binding.recycler.getAdapter().notifyDataSetChanged()
-			}
-		} else {
-			Log.v(Tag, "Progress received when song is playing: $song")
-		}
-	}
+            //Log.v(Tag, "Progress[$index] = $progress song=$song")
+            runOnUiThread {
+                binding.recycler.getAdapter().notifyDataSetChanged()
+            }
+        } else {
+            Log.v(Tag, "Progress received when song is playing: $song")
+        }
+    }
 
-	override fun onPlaySong(song: Song, index: Int) {
-		val playlist: List<Song>? = currentPlaylist
-		if (playlist != null) {
-			for(s in playlist) {
-				s.isPlaying = false
-			}
-		} else {
-			Log.v(Tag, "onPlaySong received when playlist is empty")
-		}
-		song.isPlaying = true
-		song.isQueued = false
+    override fun onPlaySong(song: Song, index: Int) {
+        val playlist: List<Song>? = currentPlaylist
+        if (playlist != null) {
+            for(s in playlist) {
+                s.isPlaying = false
+            }
+        } else {
+            Log.v(Tag, "onPlaySong received when playlist is empty")
+        }
+        song.isPlaying = true
+        song.isQueued = false
 
-		runOnUiThread {
-			binding.recycler.getAdapter().notifyDataSetChanged()
-		}
-		Log.i(Tag, "Playing track $index, adapter: $adapter")
-	}
+        runOnUiThread {
+            binding.recycler.getAdapter().notifyDataSetChanged()
+        }
+        Log.i(Tag, "Playing track $index, adapter: $adapter")
+    }
 
-	override fun onEnqueueTrack(index: Int) {
-		val playlist: List<Song>? = currentPlaylist
-		if (playlist != null) {
-			for(s in playlist) {
-				s.isQueued = false
-			}
-		} else {
-			Log.v(Tag, "onEnqueueTrack received when playlist is empty")
-			return
-		}
-		val song = playlist[index]
-		song.isPlaying = false
-		song.isQueued = true
+    override fun onEnqueueTrack(index: Int) {
+        val playlist: List<Song>? = currentPlaylist
+        if (playlist != null) {
+            for(s in playlist) {
+                s.isQueued = false
+            }
+        } else {
+            Log.v(Tag, "onEnqueueTrack received when playlist is empty")
+            return
+        }
+        val song = playlist[index]
+        song.isPlaying = false
+        song.isQueued = true
 
-		runOnUiThread {
-			binding.recycler.getAdapter().notifyDataSetChanged()
-		}
-		Log.i(Tag, "Enqueued track $index")
-	}
+        runOnUiThread {
+            binding.recycler.getAdapter().notifyDataSetChanged()
+        }
+        Log.i(Tag, "Enqueued track $index")
+    }
 
     override fun onPlaylistLoaded(playlist: List<Song>) {
         runOnUiThread {
-			currentPlaylist = playlist
+            currentPlaylist = playlist
 
             val itemBinder = object : ItemType<ItemPlaylistBinding>(R.layout.item_playlist) {
                 override fun onBind(holder: Holder<ItemPlaylistBinding>) {
