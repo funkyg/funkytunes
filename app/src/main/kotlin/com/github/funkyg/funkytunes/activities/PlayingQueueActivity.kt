@@ -65,14 +65,14 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
 		val song = playlist[index]
 		if (!song.isPlaying) {
 			song.isPlaying = false
-			song.isQueued = true
-			song.progress = progress.toFloat()
+			song.progress = progress.toInt()
 
+			//Log.v(Tag, "Progress[$index] = $progress song=$song")
 			runOnUiThread {
 				binding.recycler.getAdapter().notifyDataSetChanged()
 			}
 		} else {
-			Log.v(Tag, "Progress received when song is playing")
+			Log.v(Tag, "Progress received when song is playing: $song")
 		}
 	}
 
@@ -96,7 +96,12 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
 
 	override fun onEnqueueTrack(index: Int) {
 		val playlist: List<Song>? = currentPlaylist
-		if (playlist == null) {
+		if (playlist != null) {
+			for(s in playlist) {
+				s.isQueued = false
+			}
+		} else {
+			Log.v(Tag, "onEnqueueTrack received when playlist is empty")
 			return
 		}
 		val song = playlist[index]

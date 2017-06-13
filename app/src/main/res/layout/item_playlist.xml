@@ -72,6 +72,7 @@
 				custom:donut_unfinished_stroke_width="3dp"
 				custom:donut_text_color="#00000000"
 				custom:donut_finished_color="#FE4083"
+				custom:donut_progress="@{song.stringProgress}"
 				android:visibility="@{song.songProgressVisible}" />
 
         </RelativeLayout>

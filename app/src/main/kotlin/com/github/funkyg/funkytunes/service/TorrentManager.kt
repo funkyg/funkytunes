@@ -104,7 +104,7 @@ class TorrentManager(private val context: Context) : AlertListener {
 				}
 				AlertType.BLOCK_FINISHED -> {
 					// Update progress bars when a block has finished downloading
-					if (System.currentTimeMillis() - lastProgressUpdate > 500) {
+					if (System.currentTimeMillis() - lastProgressUpdate > 250) {
 						val finished = alert as BlockFinishedAlert
 						val handle = sessionManager.find(currentHash)
 						val progress = handle.fileProgress()
