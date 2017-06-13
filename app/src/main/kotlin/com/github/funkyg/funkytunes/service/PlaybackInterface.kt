@@ -15,4 +15,5 @@ interface PlaybackInterface {
     fun onPlayNext() {}
 	fun onEnqueueTrack(index: Int) {}
 	fun onProgress(index: Int, progress: Int) {}
+    fun onStopped() {}
 }

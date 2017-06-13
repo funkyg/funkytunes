@@ -79,4 +79,9 @@ class BottomControlView(context: Context, attrs: AttributeSet?, defStyleAttr: In
         playPause.setOnClickListener { musicService.resume() }
         handler?.removeCallbacks(incrementProgressRunnable)
     }
+
+    override fun onStopped() {
+        visibility = View.GONE
+
+    }
 }
