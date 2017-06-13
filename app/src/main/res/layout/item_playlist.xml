@@ -50,7 +50,7 @@
                 android:layout_alignParentTop="true"
                 android:layout_gravity="right"
                 android:src="@drawable/ic_play_arrow_accent_24dp"
-                android:visibility="gone" />
+				android:visibility="@{song.songPlayingVisible}" />
 
             <ProgressBar
                 android:id="@+id/songloading"
@@ -60,7 +60,7 @@
                 android:layout_alignParentRight="true"
                 android:layout_alignParentTop="true"
                 android:indeterminate="true"
-                android:visibility="gone" />
+				android:visibility="@{song.songLoadingVisible}" />
 
             <com.github.lzyzsd.circleprogress.DonutProgress
                 android:id="@+id/songprogress"
@@ -72,7 +72,7 @@
 				custom:donut_unfinished_stroke_width="3dp"
 				custom:donut_text_color="#00000000"
 				custom:donut_finished_color="#FE4083"
-                android:visibility="gone" />
+				android:visibility="@{song.songProgressVisible}" />
 
         </RelativeLayout>
 

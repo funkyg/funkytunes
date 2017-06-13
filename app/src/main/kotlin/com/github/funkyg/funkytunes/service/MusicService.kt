@@ -139,8 +139,11 @@ class MusicService : Service() {
             mmr.setDataSource(file.absolutePath)
             val title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE) ?: ""
             val artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST) ?: ""
-            currentSongInfo = Song(title, artist, playlist!![currentTrack].image,
-                                   mediaPlayer?.duration?.div(1000))
+			val song = playlist!![currentTrack]
+			song.name = title
+			song.artist = artist
+			song.duration = mediaPlayer?.duration?.div(1000)
+			currentSongInfo = song
 
             Handler(Looper.getMainLooper()).post({
                 playbackListeners.forEach { l ->

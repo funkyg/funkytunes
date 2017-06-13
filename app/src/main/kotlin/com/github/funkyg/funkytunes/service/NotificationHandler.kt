@@ -117,6 +117,10 @@ class NotificationHandler(private val service: MusicService) : BroadcastReceiver
             handler.removeCallbacks(StopForegroundRunnable)
         }
 
+		if (currentSong == null) {
+			return
+		}
+
         Thread(Runnable {
             val notificationBuilder = NotificationCompat.Builder(service)
 

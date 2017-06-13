@@ -23,7 +23,9 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
 	private val Tag = "PlayingQueueActivity"
 
     private lateinit var binding: ActivityPlayingQueueBinding
-	private val albumBindings = mutableMapOf<Int, ItemPlaylistBinding>()
+
+	private var adapter: LastAdapter? = null
+	private var currentPlaylist: List<Song>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,7 +42,6 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
         super.onDestroy()
         service!!.removePlaybackInterface(this)
         service?.removePlaybackInterface(binding.bottomControl.root as PlaybackInterface)
-		albumBindings.clear()
     }
 
     override fun onPlayAlbum(album: Album) {
@@ -52,56 +53,75 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
     }
 
     override fun onCancelAlbum() {
-		albumBindings.clear()
         finish()
     }
 
 	override fun onProgress(index: Int, progress: Int) {
-        if(albumBindings.get(index)?.songplaying?.visibility != View.VISIBLE) {
-			albumBindings.get(index)?.songplaying?.visibility = View.GONE
-			albumBindings.get(index)?.songloading?.visibility = View.GONE
+		val playlist: List<Song>? = currentPlaylist
+		if (playlist == null) {
+			Log.v(Tag, "Progress received when playlist is null")
+			return
+		}
+		val song = playlist[index]
+		if (!song.isPlaying) {
+			song.isPlaying = false
+			song.isQueued = true
+			song.progress = progress.toFloat()
 
-			albumBindings.get(index)?.songprogress?.setProgress(progress.toFloat())
-			albumBindings.get(index)?.songprogress?.visibility = View.VISIBLE
+			runOnUiThread {
+				binding.recycler.getAdapter().notifyDataSetChanged()
+			}
+		} else {
+			Log.v(Tag, "Progress received when song is playing")
 		}
 	}
 
 	override fun onPlaySong(song: Song, index: Int) {
-		for(binding in albumBindings.values) {
-			binding.songplaying.visibility = View.GONE
+		val playlist: List<Song>? = currentPlaylist
+		if (playlist != null) {
+			for(s in playlist) {
+				s.isPlaying = false
+			}
+		} else {
+			Log.v(Tag, "onPlaySong received when playlist is empty")
 		}
-        albumBindings.get(index)?.songplaying?.visibility = View.VISIBLE
-        albumBindings.get(index)?.songloading?.visibility = View.GONE
-        albumBindings.get(index)?.songprogress?.visibility = View.GONE
-		Log.i(Tag, "Playing track $index")
+		song.isPlaying = true
+		song.isQueued = false
+
+		runOnUiThread {
+			binding.recycler.getAdapter().notifyDataSetChanged()
+		}
+		Log.i(Tag, "Playing track $index, adapter: $adapter")
 	}
 
 	override fun onEnqueueTrack(index: Int) {
-		for(binding in albumBindings.values) {
-			binding.songloading.visibility = View.GONE
+		val playlist: List<Song>? = currentPlaylist
+		if (playlist == null) {
+			return
 		}
-        albumBindings.get(index)?.songplaying?.visibility = View.GONE
-        albumBindings.get(index)?.songprogress?.visibility = View.GONE
-        albumBindings.get(index)?.songloading?.visibility = View.VISIBLE
-        albumBindings.get(index)?.songloading?.setIndeterminate(true)
+		val song = playlist[index]
+		song.isPlaying = false
+		song.isQueued = true
+
+		runOnUiThread {
+			binding.recycler.getAdapter().notifyDataSetChanged()
+		}
 		Log.i(Tag, "Enqueued track $index")
 	}
 
     override fun onPlaylistLoaded(playlist: List<Song>) {
         runOnUiThread {
-			albumBindings.clear()
+			currentPlaylist = playlist
 
             val itemBinder = object : ItemType<ItemPlaylistBinding>(R.layout.item_playlist) {
                 override fun onBind(holder: Holder<ItemPlaylistBinding>) {
-					albumBindings[holder.adapterPosition] = holder.binding
-
                     holder.binding.root.setOnClickListener {
                         service!!.playTrack(holder.adapterPosition)
                     }
                 }
             }
 
-            LastAdapter(playlist, BR.song)
+            adapter = LastAdapter(playlist, BR.song)
                     .map(Song::class.java, itemBinder)
                     .into(binding.recycler)
             binding.recycler.visibility = View.VISIBLE
