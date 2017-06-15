@@ -13,8 +13,8 @@
 
         <ImageView
             android:id="@+id/image"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
             android:layout_margin="5dp"
             app:url="@{album.image.url}"/>
 
@@ -24,17 +24,30 @@
             android:layout_height="wrap_content"
             android:layout_toEndOf="@+id/image"
             android:layout_marginTop="5dp"
-            android:text="@{album.titleyear}"
+            android:text="@{album.title}"
+            android:textColor="@android:color/secondary_text_light"
+            android:textStyle="bold"
             tools:text="Name"/>
+
+        <TextView
+            android:id="@+id/artist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/image"
+            android:layout_below="@+id/title"
+            android:text="@{album.artist}"
+            android:textColor="@android:color/tertiary_text_light"
+            tools:text="Artist"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_toEndOf="@+id/image"
-            android:layout_below="@+id/title"
-            android:layout_marginTop="10dp"
-            android:text="@{album.artist}"
-            tools:text="Artist"/>
+            android:layout_below="@+id/artist"
+            android:layout_marginBottom="5dp"
+            android:text="@{Integer.toString(album.year)}"
+            android:textColor="@android:color/tertiary_text_light"
+            tools:text="2010"/>
 
         <View
             android:layout_width="match_parent"
