@@ -30,8 +30,8 @@ class SearchHandler(val context: Context) {
                     // HACK: Apparently Discogs does not return artist and title seperately, so we
                     //       have to extract them this way. Also, some results dont have a year.
                     val year by it.json.byNullableInt("year")
-                    Album(it.json["title"].string.split(" - ")[0],
-                            it.json["title"].string.split(" - ")[1],
+                    Album(it.json["title"].string.split(" - ")[1],
+                            it.json["title"].string.split(" - ")[0],
                             year,
                             Image(it.json["thumb"].string))
                 }
