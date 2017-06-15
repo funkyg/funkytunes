@@ -1,19 +1,20 @@
 package com.github.funkyg.funkytunes.service
 
 import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.media.AudioManager
 import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Binder
 import android.os.Handler
 import android.os.Looper
-import android.telephony.TelephonyManager
 import android.util.Log
 import android.widget.Toast
 import com.github.funkyg.funkytunes.Album
-import com.github.funkyg.funkytunes.CallReceiver
 import com.github.funkyg.funkytunes.FunkyApplication
 import com.github.funkyg.funkytunes.Song
 import javax.inject.Inject
@@ -24,13 +25,18 @@ class MusicService : Service() {
 
     @Inject lateinit var torrentManager: TorrentManager
     private val notificationHandler by lazy { NotificationHandler(this) }
-    private val callReceiver = CallReceiver(this)
     private var mediaPlayer: MediaPlayer? = null
     private val playbackListeners = ArrayList<PlaybackInterface>()
     private var playedAlbum: Album? = null
     private val playlist = ArrayList<Song>()
     private var currentTrack: Int = 0
     private var currentSongInfo: Song? = null
+    private val becomingNoisyReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.i(Tag, "Received ACTION_AUDIO_BECOMING_NOISY intent")
+            this@MusicService.pause()
+        }
+    }
 
     class MusicBinder(val service: MusicService) : Binder()
 
@@ -42,7 +48,6 @@ class MusicService : Service() {
         super.onCreate()
         (applicationContext as FunkyApplication).component.inject(this)
         addPlaybackInterface(notificationHandler)
-        registerReceiver(callReceiver, IntentFilter(TelephonyManager.ACTION_PHONE_STATE_CHANGED))
 
         // Delete all files, so we don't run out of space.
         // This should be replaced by proper cache handling, to discard files only if a certain
@@ -55,7 +60,6 @@ class MusicService : Service() {
         torrentManager.destroy()
         notificationHandler.stop()
         removePlaybackInterface(notificationHandler)
-        unregisterReceiver(callReceiver)
     }
 
     fun play(album: Album) {
@@ -81,11 +85,21 @@ class MusicService : Service() {
     fun pause() {
         playbackListeners.forEach { l -> l.onPaused() }
         mediaPlayer?.pause()
+        playbackStopped()
     }
 
     fun resume() {
         playbackListeners.forEach { l -> l.onResumed() }
         mediaPlayer?.start()
+        playbackStarted()
+    }
+
+    private fun playbackStopped() {
+        unregisterReceiver(becomingNoisyReceiver)
+    }
+
+    private fun playbackStarted() {
+        registerReceiver(becomingNoisyReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
     }
 
     fun isPlaying(): Boolean {
@@ -118,6 +132,7 @@ class MusicService : Service() {
         playlist.clear()
         currentSongInfo = null
         playbackListeners.forEach { l -> l.onStopped() }
+        playbackStopped()
     }
 
     fun playTrack(index: Int) {
@@ -135,14 +150,16 @@ class MusicService : Service() {
         torrentManager.requestSong(currentTrack, { file ->
             Log.i(Tag, "Playing track " + file.name)
             mediaPlayer = MediaPlayer.create(this, Uri.fromFile(file))
+            mediaPlayer?.setAudioStreamType(AudioManager.STREAM_MUSIC)
             mediaPlayer?.start()
             mediaPlayer?.setOnCompletionListener{ songCompleted()}
+            playbackStarted()
 
             val mmr = MediaMetadataRetriever()
             mmr.setDataSource(file.absolutePath)
             val title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE) ?: ""
             val artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST) ?: ""
-            currentSongInfo = Song(title, artist, playlist!![currentTrack].image,
+            currentSongInfo = Song(title, artist, playlist[currentTrack].image,
                                    mediaPlayer?.duration?.div(1000))
 
             Handler(Looper.getMainLooper()).post({
@@ -160,6 +177,7 @@ class MusicService : Service() {
     private fun songCompleted() {
         if (currentTrack + 1 >= playlist.size) {
             playbackListeners.forEach { l -> l.onPaused() }
+            playbackStopped()
             stopSelf()
             return
         }
