@@ -22,19 +22,42 @@ import javax.inject.Inject
 class MusicService : Service() {
 
     private val Tag = "MusicService"
+    // The volume we set the media player to when we lose audio focus, but are allowed to reduce
+    // the volume instead of stopping playback.
+    private val DUCK_VOLUME = 0.1f
 
     @Inject lateinit var torrentManager: TorrentManager
     private val notificationHandler by lazy { NotificationHandler(this) }
+    private val audioManager by lazy {getSystemService(Context.AUDIO_SERVICE) as AudioManager}
+
     private var mediaPlayer: MediaPlayer? = null
     private val playbackListeners = ArrayList<PlaybackInterface>()
     private var playedAlbum: Album? = null
     private val playlist = ArrayList<Song>()
     private var currentTrack: Int = 0
     private var currentSongInfo: Song? = null
+
     private val becomingNoisyReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             Log.i(Tag, "Received ACTION_AUDIO_BECOMING_NOISY intent")
-            this@MusicService.pause()
+            pause()
+        }
+    }
+    private val afChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
+        when (focusChange) {
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                Log.i(Tag, "AUDIOFOCUS_GAIN")
+                mediaPlayer?.setVolume(1f, 1f)
+                resume()
+            }
+            AudioManager.AUDIOFOCUS_LOSS, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                Log.i(Tag, "AUDIOFOCUS_LOSS, AUDIOFOCUS_LOSS_TRANSIENT")
+                pause()
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                Log.i(Tag, "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK")
+                mediaPlayer?.setVolume(DUCK_VOLUME, DUCK_VOLUME)
+            }
         }
     }
 
@@ -89,17 +112,25 @@ class MusicService : Service() {
     }
 
     fun resume() {
-        playbackListeners.forEach { l -> l.onResumed() }
-        mediaPlayer?.start()
-        playbackStarted()
+        playbackStarted {
+            playbackListeners.forEach { l -> l.onResumed() }
+            mediaPlayer?.start()
+        }
     }
 
     private fun playbackStopped() {
         unregisterReceiver(becomingNoisyReceiver)
+        audioManager.abandonAudioFocus(afChangeListener)
     }
 
-    private fun playbackStarted() {
-        registerReceiver(becomingNoisyReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
+    private fun playbackStarted(callback: () -> Unit) {
+        val result = audioManager.requestAudioFocus(afChangeListener, AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN)
+
+        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            registerReceiver(becomingNoisyReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
+            callback()
+        }
     }
 
     fun isPlaying(): Boolean {
@@ -148,26 +179,27 @@ class MusicService : Service() {
      */
     private fun playTrack() {
         torrentManager.requestSong(currentTrack, { file ->
-            Log.i(Tag, "Playing track " + file.name)
-            mediaPlayer = MediaPlayer.create(this, Uri.fromFile(file))
-            mediaPlayer?.setAudioStreamType(AudioManager.STREAM_MUSIC)
-            mediaPlayer?.start()
-            mediaPlayer?.setOnCompletionListener{ songCompleted()}
-            playbackStarted()
+            playbackStarted {
+                Log.i(Tag, "Playing track " + file.name)
+                mediaPlayer = MediaPlayer.create(this, Uri.fromFile(file))
+                mediaPlayer?.setAudioStreamType(AudioManager.STREAM_MUSIC)
+                mediaPlayer?.start()
+                mediaPlayer?.setOnCompletionListener { songCompleted() }
 
-            val mmr = MediaMetadataRetriever()
-            mmr.setDataSource(file.absolutePath)
-            val title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE) ?: ""
-            val artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST) ?: ""
-            currentSongInfo = Song(title, artist, playlist[currentTrack].image,
-                                   mediaPlayer?.duration?.div(1000))
+                val mmr = MediaMetadataRetriever()
+                mmr.setDataSource(file.absolutePath)
+                val title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE) ?: ""
+                val artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST) ?: ""
+                currentSongInfo = Song(title, artist, playlist[currentTrack].image,
+                        mediaPlayer?.duration?.div(1000))
 
-            Handler(Looper.getMainLooper()).post({
-                playbackListeners.forEach { l ->
-                    l.onPlaySong(currentSongInfo!!)
-                    l.onResumed()
-                }
-            })
+                Handler(Looper.getMainLooper()).post({
+                    playbackListeners.forEach { l ->
+                        l.onPlaySong(currentSongInfo!!)
+                        l.onResumed()
+                    }
+                })
+            }
         })
     }
 
