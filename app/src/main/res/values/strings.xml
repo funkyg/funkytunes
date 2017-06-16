@@ -42,4 +42,9 @@ By using \' Funkytunes\' or accessing this site you affirm that you are either m
     <string name="units_mbps">%1$d MB/s</string>
     <string name="units_gbps">%1$d GB/s</string>
     <string name="exit">Exit</string>
+    <string name="preference_category_general">General</string>
+    <string name="preference_category_about_funkytunes">About Funkytunes</string>
+    <string name="download_only_vpn">Download only on VPN</string>
+    <string name="notification_vpn_disabled_title">Funkytunes paused</string>
+    <string name="notification_vpn_disabled_text">VPN is not connected</string>
 </resources>
