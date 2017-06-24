@@ -159,6 +159,18 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
         }
     }
 
+    override fun onResumed() {
+        val playlist: List<Song>? = currentPlaylist
+        if (playlist != null) {
+            for(s in playlist) {
+                s.isPaused = false
+            }
+        }
+        runOnUiThread {
+            binding.recycler.getAdapter().notifyDataSetChanged()
+        }
+    }
+
     override fun onStopped() {
         binding.recycler.visibility = View.GONE
         binding.progress.visibility = View.GONE
