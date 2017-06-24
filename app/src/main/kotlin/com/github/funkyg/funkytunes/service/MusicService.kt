@@ -203,11 +203,17 @@ class MusicService : Service() {
 
                 Handler(Looper.getMainLooper()).post({
                     playbackListeners.forEach { l ->
-                        l.onPlaySong(currentSongInfo!!)
+                        l.onPlaySong(currentSongInfo!!, currentTrack)
                         l.onResumed()
                     }
                 })
             }
+        }, {index: Int, progress: Int -> 
+            Handler(Looper.getMainLooper()).post({
+                playbackListeners.forEach { l ->
+                    l.onProgress(index, progress)
+                }
+            })
         })
     }
 
