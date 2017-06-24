@@ -52,16 +52,6 @@
                 android:src="@drawable/ic_play_arrow_accent_24dp"
                 android:visibility="@{song.songPlayingVisible}" />
 
-            <ImageView
-                android:id="@+id/songpaused"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_alignParentRight="true"
-                android:layout_gravity="right"
-                android:layout_centerVertical="true"
-                android:src="@drawable/ic_pause_accent_24dp"
-                android:visibility="@{song.songPausedVisible}" />
-
             <ProgressBar
                 android:id="@+id/songloading"
                 style="@style/Widget.AppCompat.ProgressBar"
