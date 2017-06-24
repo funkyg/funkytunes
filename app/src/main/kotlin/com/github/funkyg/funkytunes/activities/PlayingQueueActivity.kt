@@ -89,12 +89,14 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
         if (playlist != null) {
             for(s in playlist) {
                 s.isPlaying = false
+                s.isPaused = false
             }
         } else {
             Log.v(Tag, "onPlaySong received when playlist is empty")
         }
         song.isPlaying = true
         song.isQueued = false
+        song.isPaused = false
 
         runOnUiThread {
             binding.recycler.getAdapter().notifyDataSetChanged()
@@ -107,6 +109,8 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
         if (playlist != null) {
             for(s in playlist) {
                 s.isQueued = false
+                s.isPlaying = false
+                s.isPaused = false
             }
         } else {
             Log.v(Tag, "onEnqueueTrack received when playlist is empty")
@@ -140,6 +144,18 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
             binding.recycler.visibility = View.VISIBLE
             binding.progress.visibility = View.GONE
             binding.empty.visibility = View.GONE
+        }
+    }
+
+    override fun onPaused() {
+        val playlist: List<Song>? = currentPlaylist
+        if (playlist != null) {
+            for(s in playlist) {
+                s.isPaused = true
+            }
+        }
+        runOnUiThread {
+            binding.recycler.getAdapter().notifyDataSetChanged()
         }
     }
 

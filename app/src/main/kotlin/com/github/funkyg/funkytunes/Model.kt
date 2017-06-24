@@ -13,8 +13,11 @@ data class Album(val title: String, val artist: String, val year: Int?, val imag
 }
 
 data class Song(var name: String, var artist: String?, val image: Image, var duration: Int?, val indexInTorrent: Int, var isPlaying: Boolean = false, var isQueued: Boolean = false, var progress: Int = 0) {
+    var isPaused: Boolean = false
+    val songPausedVisible: Int
+        get() = if (isPlaying && !isQueued && isPaused) View.VISIBLE else View.GONE
     val songPlayingVisible: Int
-        get() = if (isPlaying && !isQueued) View.VISIBLE else View.GONE
+        get() = if (isPlaying && !isQueued && !isPaused) View.VISIBLE else View.GONE
     val songProgressVisible: Int
         get() = if (isQueued && !isPlaying && progress > 0) View.VISIBLE else View.GONE
     val songLoadingVisible: Int
