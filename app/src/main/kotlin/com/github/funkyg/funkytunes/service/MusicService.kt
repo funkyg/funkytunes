@@ -36,6 +36,7 @@ class MusicService : Service() {
     private val playlist = ArrayList<Song>()
     private var currentTrack: Int = 0
     private var currentSongInfo: Song? = null
+	private var noisyReceiverRegistered = false
 
     private val becomingNoisyReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -119,7 +120,9 @@ class MusicService : Service() {
     }
 
     private fun playbackStopped() {
-        unregisterReceiver(becomingNoisyReceiver)
+		if (noisyReceiverRegistered) {
+			unregisterReceiver(becomingNoisyReceiver)
+		}
         audioManager.abandonAudioFocus(afChangeListener)
     }
 
@@ -129,6 +132,7 @@ class MusicService : Service() {
 
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             registerReceiver(becomingNoisyReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
+			noisyReceiverRegistered = true
             callback()
         }
     }
