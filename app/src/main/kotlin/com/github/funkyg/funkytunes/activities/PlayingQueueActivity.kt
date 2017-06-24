@@ -73,8 +73,10 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
             song.progress = progress.toInt()
 
             //Log.v(Tag, "Progress[$index] = $progress song=$song")
-            runOnUiThread {
-                binding.recycler.getAdapter().notifyDataSetChanged()
+            if(song.progress > 0) {
+                runOnUiThread {
+                    binding.recycler.getAdapter().notifyDataSetChanged()
+                }
             }
         } else {
             Log.v(Tag, "Progress received when song is playing: $song")

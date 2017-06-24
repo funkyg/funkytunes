@@ -121,7 +121,10 @@ class MusicService : Service() {
 
     private fun playbackStopped() {
 		if (noisyReceiverRegistered) {
-			unregisterReceiver(becomingNoisyReceiver)
+            try {
+                unregisterReceiver(becomingNoisyReceiver)
+            } catch (t: Throwable) {
+            }
 		}
         audioManager.abandonAudioFocus(afChangeListener)
     }
