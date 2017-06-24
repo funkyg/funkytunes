@@ -49,6 +49,7 @@
                 android:layout_alignParentRight="true"
                 android:layout_alignParentTop="true"
                 android:layout_gravity="right"
+                android:layout_centerVertical="true"
                 android:src="@drawable/ic_play_arrow_accent_24dp"
                 android:visibility="@{song.songPlayingVisible}" />
 
@@ -59,6 +60,7 @@
                 android:layout_height="32dp"
                 android:layout_alignParentRight="true"
                 android:layout_alignParentTop="true"
+                android:layout_centerVertical="true"
                 android:indeterminate="true"
                 android:visibility="@{song.songLoadingVisible}" />
 
@@ -68,6 +70,7 @@
                 android:layout_height="32dp"
                 android:layout_alignParentRight="true"
                 android:layout_alignParentTop="true"
+                android:layout_centerVertical="true"
                 custom:donut_finished_stroke_width="3dp"
                 custom:donut_unfinished_stroke_width="3dp"
                 custom:donut_text_color="#00000000"

@@ -114,19 +114,17 @@ class TorrentManager(private val context: Context) : AlertListener {
 						val progress = handle.fileProgress()
 						val origFiles = handle.torrentFile().origFiles()
 
-						for (i in progress.indices) {
-							if (fileProgressListener != null && fileProgressListener?.first == i) {
-								val i_progress = progress[i]
-								val percent = 100 * i_progress / origFiles.fileSize(i)
-								val currentFile = files!!.find { f -> f.indexInTorrent == i }
-								if (currentFile != null) {
-									val name = currentFile.filename
-									Log.i(Tag, "Progress: $name - $percent%")
-									fileProgressListener?.second?.invoke(i, percent.toInt())
-								}
-								break
-							}
-						}
+                        if (fileProgressListener != null) {
+                            val i = fileProgressListener!!.first
+                            val i_progress = progress[i]
+                            val percent = 100 * i_progress / origFiles.fileSize(i)
+                            val currentFile = files!!.find { f -> f.indexInTorrent == i }
+                            if (currentFile != null) {
+                                val name = currentFile.filename
+                                Log.i(Tag, "Progress: $name - $percent%")
+                                fileProgressListener?.second?.invoke(i, percent.toInt())
+                            }
+                        }
 
 						lastProgressUpdate = System.currentTimeMillis()
 					}

@@ -67,7 +67,7 @@ class MusicService : Service() {
         playedAlbum = album
         currentTrack = 0
         torrentManager.setCurrentAlbum(album, { fileList ->
-            playlist.addAll(fileList.map { f -> Song(f, album.artist, album.image, null) })
+            playlist.addAll(fileList.mapIndexed { idx, f -> Song(f, album.artist, album.image, null, idx) })
             playbackListeners.forEach { l -> l.onPlaylistLoaded(playlist) }
             playTrack()
         }, { messageRes ->

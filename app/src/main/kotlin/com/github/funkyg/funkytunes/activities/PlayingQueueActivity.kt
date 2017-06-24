@@ -56,13 +56,18 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
         finish()
     }
 
-    override fun onProgress(index: Int, progress: Int) {
+    override fun onProgress(indexInTorrent: Int, progress: Int) {
         val playlist: List<Song>? = currentPlaylist
         if (playlist == null) {
             Log.v(Tag, "Progress received when playlist is null")
             return
         }
-        val song = playlist[index]
+
+        val songs = playlist.filter({s -> s.indexInTorrent == indexInTorrent})
+        if (songs.size == 0) {
+            Log.v(Tag, "Progress received for unknown file index $indexInTorrent")
+        }
+        val song = songs[0]
         if (!song.isPlaying) {
             song.isPlaying = false
             song.progress = progress.toInt()
