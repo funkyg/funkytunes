@@ -68,12 +68,13 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
             Log.v(Tag, "Progress received for unknown file index $indexInTorrent")
         }
         val song = songs[0]
+        val lastProgress = song.progress
         if (!song.isPlaying) {
             song.isPlaying = false
             song.progress = progress.toInt()
 
             //Log.v(Tag, "Progress[$index] = $progress song=$song")
-            if(song.progress > 0) {
+            if(lastProgress != song.progress) {
                 runOnUiThread {
                     binding.recycler.getAdapter().notifyDataSetChanged()
                 }
@@ -112,14 +113,11 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
             return
         }
         val song = playlist[index]
-        val loadingWasVisible = song.songLoadingVisible
         song.isPlaying = false
         song.isQueued = true
 
-        if(loadingWasVisible == 0) {
-            runOnUiThread {
-                binding.recycler.getAdapter().notifyDataSetChanged()
-            }
+        runOnUiThread {
+            binding.recycler.getAdapter().notifyDataSetChanged()
         }
         Log.i(Tag, "Enqueued track $index")
     }
