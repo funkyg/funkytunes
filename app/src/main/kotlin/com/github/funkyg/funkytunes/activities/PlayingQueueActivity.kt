@@ -110,11 +110,14 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
             return
         }
         val song = playlist[index]
+        val loadingWasVisible = song.songLoadingVisible
         song.isPlaying = false
         song.isQueued = true
 
-        runOnUiThread {
-            binding.recycler.getAdapter().notifyDataSetChanged()
+        if (!loadingWasVisible) {
+            runOnUiThread {
+                binding.recycler.getAdapter().notifyDataSetChanged()
+            }
         }
         Log.i(Tag, "Enqueued track $index")
     }
