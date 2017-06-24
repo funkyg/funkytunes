@@ -114,7 +114,7 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
         song.isPlaying = false
         song.isQueued = true
 
-        if (!loadingWasVisible) {
+        if(loadingWasVisible == 0) {
             runOnUiThread {
                 binding.recycler.getAdapter().notifyDataSetChanged()
             }

@@ -16,9 +16,9 @@ data class Song(var name: String, var artist: String?, val image: Image, var dur
     val songPlayingVisible: Int
         get() = if (isPlaying && !isQueued) View.VISIBLE else View.GONE
     val songProgressVisible: Int
-        get() = if (isQueued && !isPlaying && progress > 1) View.VISIBLE else View.GONE
+        get() = if (isQueued && !isPlaying && progress > 0) View.VISIBLE else View.GONE
     val songLoadingVisible: Int
-        get() = if (isQueued && !isPlaying && progress <= 1) View.VISIBLE else View.GONE
+        get() = if (isQueued && !isPlaying && progress <= 0) View.VISIBLE else View.GONE
     val stringProgress: String
         get() = progress.toString()
 }
