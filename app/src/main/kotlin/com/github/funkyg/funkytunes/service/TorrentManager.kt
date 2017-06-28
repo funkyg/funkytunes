@@ -1,13 +1,11 @@
 package com.github.funkyg.funkytunes.service
 
 import android.content.Context
+import android.media.MediaMetadataRetriever
 import android.os.Handler
 import android.util.Log
 import com.frostwire.jlibtorrent.*
-import com.frostwire.jlibtorrent.alerts.AddTorrentAlert
-import com.frostwire.jlibtorrent.alerts.Alert
-import com.frostwire.jlibtorrent.alerts.AlertType
-import com.frostwire.jlibtorrent.alerts.FileCompletedAlert
+import com.frostwire.jlibtorrent.alerts.*
 import com.github.funkyg.funkytunes.Album
 import com.github.funkyg.funkytunes.FunkyApplication
 import com.github.funkyg.funkytunes.R
@@ -54,34 +52,63 @@ class TorrentManager(private val context: Context) : AlertListener {
         sessionManager.stop()
     }
 
-    override fun types() = intArrayOf(AlertType.ADD_TORRENT.swig(), AlertType.FILE_COMPLETED.swig())
+    override fun types() = intArrayOf(AlertType.ADD_TORRENT.swig(), AlertType.FILE_COMPLETED.swig(), AlertType.PIECE_FINISHED.swig())
 
     override fun alert(alert: Alert<*>) {
 		try {
 			val type = alert.type()
 
-			when (type) {
-				AlertType.ADD_TORRENT -> {
-					val handle = (alert as AddTorrentAlert).handle()
-					handle.resume()
-					handle.prioritizeFiles(getTorrentFiles(handle).map{ Priority.IGNORE }.toTypedArray())
-					files = getTorrentFiles(handle)
-							.withIndex()
-							.filter { p -> (p.value.endsWith(".mp3") || p.value.endsWith(".flac") || p.value.endsWith(".ogg") || p.value.endsWith(".m4a")) }
-							.sortedBy { f -> f.value }
-							.map { f -> FileInfo(f.value, f.index, false, File(handle.savePath(), f.value)) }
-					if (files!!.isEmpty()) {
-						errorListener!!.invoke(R.string.error_torrent_invalid_files)
-						sessionManager.remove(handle)
-					}
-					else {
-						currentHash = handle.infoHash()
-						onTorrentAddedListener?.invoke(files!!.map { f -> convertToFriendlySongName(f.filename) })
-						onTorrentAddedListener = null
-					}
-				}
-				AlertType.FILE_COMPLETED -> {
-					val position = (alert as FileCompletedAlert).index()
+			when (alert) {
+                is AddTorrentAlert -> {
+                    val handle = alert.handle()
+                    handle.setSequentialDownload(true)
+                    handle.resume()
+                    handle.prioritizeFiles(getTorrentFiles(handle).map { Priority.IGNORE }.toTypedArray())
+                    files = getTorrentFiles(handle)
+                            .withIndex()
+                            .filter { p -> (p.value.endsWith(".mp3") || p.value.endsWith(".flac") || p.value.endsWith(".ogg") || p.value.endsWith(".m4a")) }
+                            .sortedBy { f -> f.value }
+                            .map { f -> FileInfo(f.value, f.index, false, File(handle.savePath(), f.value)) }
+                    if (files!!.isEmpty()) {
+                        errorListener!!.invoke(R.string.error_torrent_invalid_files)
+                        sessionManager.remove(handle)
+                    } else {
+                        currentHash = handle.infoHash()
+                        onTorrentAddedListener?.invoke(files!!.map { f -> convertToFriendlySongName(f.filename) })
+                        onTorrentAddedListener = null
+                    }
+                }
+                is PieceFinishedAlert -> {
+                    if (onFileCompletedListener == null)
+                        return
+
+                    val pieceIndex = alert.pieceIndex()
+                    Log.d("xxx", "piece finished: pieceIndex=$pieceIndex")
+                    val fileProgress = alert.handle()
+                            .fileProgress(TorrentHandle.FileProgressFlags.PIECE_GRANULARITY)
+
+                    val position = onFileCompletedListener!!.first
+                    val currentFilePath = files!!.find { f -> f.indexInTorrent == position }
+                    try {
+                        val mmr = MediaMetadataRetriever()
+                        mmr.setDataSource(currentFilePath!!.path.absolutePath)
+                        val bitrate = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
+                        val duration = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                        Log.v("xxx", "file=${currentFilePath.filename}, bitrate=$bitrate, duration=$duration")
+                    } catch (e: Exception) {
+                        Log.w("xxx", e)
+                    }
+                    val currentFileProgress = fileProgress.get(position)
+                    val downloadRate = alert.handle().status().downloadRate()
+                    Log.v("xxx", "file=${currentFilePath!!.filename}, currentFileProgress=$currentFileProgress, downloadRate=$downloadRate")
+                    if (currentFileProgress > 1024 * 1024) {
+                        Log.d("xxx", "invoking onFileCompletedListener")
+                        onFileCompletedListener?.second?.invoke(currentFilePath.path)
+                        onFileCompletedListener = null
+                    }
+                }
+				is FileCompletedAlert -> {
+					val position = alert.index()
 					val currentFile = files!!.find { f -> f.indexInTorrent == position }
 
 					// For some reason we are getting this event for m3u and other file types which we
@@ -96,12 +123,8 @@ class TorrentManager(private val context: Context) : AlertListener {
 							f
 					}
 
-					if (onFileCompletedListener != null && onFileCompletedListener?.first == position) {
-						onFileCompletedListener?.second?.invoke(currentFile.path)
-						onFileCompletedListener = null
-
-						preloadNextTrack(position, alert.handle())
-					}
+                    // TODO: only if we are playing that track
+                    preloadNextTrack(position, alert.handle())
 				}
 			}
 		} catch (e: Exception) {
