@@ -73,7 +73,7 @@ class PlayingQueueActivity : BaseActivity(), PlaybackInterface {
             song.isPlaying = false
             song.progress = progress.toInt()
 
-            //Log.v(Tag, "Progress[$index] = $progress song=$song")
+            Log.v(Tag, "Progress[$indexInTorrent] = $progress song=$song (${song.name})")
             if(lastProgress != song.progress) {
                 runOnUiThread {
                     binding.recycler.getAdapter().notifyDataSetChanged()

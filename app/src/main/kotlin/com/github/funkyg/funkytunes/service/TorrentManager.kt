@@ -31,7 +31,7 @@ class TorrentManager(private val context: Context) : AlertListener {
     private val sessionManager = SessionManager()
     private var files: List<FileInfo>? = null
     private var currentHash: Sha1Hash? = null
-    private var onTorrentAddedListener: ((List<String>) -> Unit)? = null
+    private var onTorrentAddedListener: ((List<Pair<String, Int>>) -> Unit)? = null
     private var onFileCompletedListener: Pair<Int, (File) -> Unit>? = null
     private var fileProgressListener: Pair<Int, (Int, Int) -> Unit>? = null
     private var errorListener: ((Int) -> Unit)? = null
@@ -79,7 +79,7 @@ class TorrentManager(private val context: Context) : AlertListener {
 					}
 					else {
 						currentHash = handle.infoHash()
-						onTorrentAddedListener?.invoke(files!!.map { f -> convertToFriendlySongName(f.filename) })
+						onTorrentAddedListener?.invoke(files!!.map { f -> Pair(convertToFriendlySongName(f.filename), f.indexInTorrent) })
 						onTorrentAddedListener = null
 					}
 				}
@@ -182,7 +182,7 @@ class TorrentManager(private val context: Context) : AlertListener {
 		}).start()
 	}
 
-    fun setCurrentAlbum(album: Album, listener: (List<String>) -> Unit, errorListener: (Int) -> Unit) {
+    fun setCurrentAlbum(album: Album, listener: (List<Pair<String, Int>>) -> Unit, errorListener: (Int) -> Unit) {
         assert(onTorrentAddedListener == null)
         onTorrentAddedListener = listener
         this.errorListener = errorListener
