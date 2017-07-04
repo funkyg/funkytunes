@@ -36,6 +36,7 @@ class MusicService : Service() {
     private val playlist = ArrayList<Song>()
     private var currentTrack: Int = 0
     private var currentSongInfo: Song? = null
+	private var noisyReceiverRegistered = false
 
     private val becomingNoisyReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -94,7 +95,7 @@ class MusicService : Service() {
         playedAlbum = album
         currentTrack = 0
         torrentManager.setCurrentAlbum(album, { fileList ->
-            playlist.addAll(fileList.map { f -> Song(f, album.artist, album.image, null) })
+            playlist.addAll(fileList.mapIndexed { idx, f -> Song(f.first, album.artist, album.image, null, f.second) })
             playbackListeners.forEach { l -> l.onPlaylistLoaded(playlist) }
             playTrack()
         }, { messageRes ->
@@ -119,7 +120,12 @@ class MusicService : Service() {
     }
 
     private fun playbackStopped() {
-        unregisterReceiver(becomingNoisyReceiver)
+		if (noisyReceiverRegistered) {
+            try {
+                unregisterReceiver(becomingNoisyReceiver)
+            } catch (t: Throwable) {
+            }
+		}
         audioManager.abandonAudioFocus(afChangeListener)
     }
 
@@ -129,6 +135,7 @@ class MusicService : Service() {
 
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             registerReceiver(becomingNoisyReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
+			noisyReceiverRegistered = true
             callback()
         }
     }
@@ -178,6 +185,11 @@ class MusicService : Service() {
      * Requests {@link #currentTrack} as torrent, and starts playing it on FILE_COMPLETED.
      */
     private fun playTrack() {
+        Handler(Looper.getMainLooper()).post({
+            playbackListeners.forEach { l ->
+                l.onEnqueueTrack(currentTrack)
+            }
+        })
         torrentManager.requestSong(currentTrack, { file ->
             playbackStarted {
                 Log.i(Tag, "Playing track " + file.name)
@@ -190,16 +202,25 @@ class MusicService : Service() {
                 mmr.setDataSource(file.absolutePath)
                 val title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE) ?: ""
                 val artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST) ?: ""
-                currentSongInfo = Song(title, artist, playlist[currentTrack].image,
-                        mediaPlayer?.duration?.div(1000))
+                val song = playlist!![currentTrack]
+                song.name = title
+                song.artist = artist
+                song.duration = mediaPlayer?.duration?.div(1000)
+                currentSongInfo = song
 
                 Handler(Looper.getMainLooper()).post({
                     playbackListeners.forEach { l ->
-                        l.onPlaySong(currentSongInfo!!)
+                        l.onPlaySong(currentSongInfo!!, currentTrack)
                         l.onResumed()
                     }
                 })
             }
+        }, {index: Int, progress: Int -> 
+            Handler(Looper.getMainLooper()).post({
+                playbackListeners.forEach { l ->
+                    l.onProgress(index, progress)
+                }
+            })
         })
     }
 

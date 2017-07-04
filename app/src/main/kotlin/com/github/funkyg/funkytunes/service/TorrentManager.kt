@@ -7,6 +7,7 @@ import com.frostwire.jlibtorrent.*
 import com.frostwire.jlibtorrent.alerts.AddTorrentAlert
 import com.frostwire.jlibtorrent.alerts.Alert
 import com.frostwire.jlibtorrent.alerts.AlertType
+import com.frostwire.jlibtorrent.alerts.BlockFinishedAlert
 import com.frostwire.jlibtorrent.alerts.FileCompletedAlert
 import com.github.funkyg.funkytunes.Album
 import com.github.funkyg.funkytunes.FunkyApplication
@@ -30,9 +31,11 @@ class TorrentManager(private val context: Context) : AlertListener {
     private val sessionManager = SessionManager()
     private var files: List<FileInfo>? = null
     private var currentHash: Sha1Hash? = null
-    private var onTorrentAddedListener: ((List<String>) -> Unit)? = null
+    private var onTorrentAddedListener: ((List<Pair<String, Int>>) -> Unit)? = null
     private var onFileCompletedListener: Pair<Int, (File) -> Unit>? = null
+    private var fileProgressListener: Pair<Int, (Int, Int) -> Unit>? = null
     private var errorListener: ((Int) -> Unit)? = null
+	private var lastProgressUpdate = System.currentTimeMillis()
 	private lateinit var torrentTimeoutHandler: Handler
 	private lateinit var torrentTimeoutRunnable: Runnable
 
@@ -54,7 +57,7 @@ class TorrentManager(private val context: Context) : AlertListener {
         sessionManager.stop()
     }
 
-    override fun types() = intArrayOf(AlertType.ADD_TORRENT.swig(), AlertType.FILE_COMPLETED.swig())
+    override fun types() = intArrayOf(AlertType.ADD_TORRENT.swig(), AlertType.FILE_COMPLETED.swig(), AlertType.BLOCK_FINISHED.swig())
 
     override fun alert(alert: Alert<*>) {
 		try {
@@ -76,7 +79,7 @@ class TorrentManager(private val context: Context) : AlertListener {
 					}
 					else {
 						currentHash = handle.infoHash()
-						onTorrentAddedListener?.invoke(files!!.map { f -> convertToFriendlySongName(f.filename) })
+						onTorrentAddedListener?.invoke(files!!.map { f -> Pair(convertToFriendlySongName(f.filename), f.indexInTorrent) })
 						onTorrentAddedListener = null
 					}
 				}
@@ -101,6 +104,29 @@ class TorrentManager(private val context: Context) : AlertListener {
 						onFileCompletedListener = null
 
 						preloadNextTrack(position, alert.handle())
+					}
+				}
+				AlertType.BLOCK_FINISHED -> {
+					// Update progress bars when a block has finished downloading
+					if (System.currentTimeMillis() - lastProgressUpdate > 250) {
+						val finished = alert as BlockFinishedAlert
+						val handle = sessionManager.find(currentHash)
+						val progress = handle.fileProgress()
+						val origFiles = handle.torrentFile().origFiles()
+
+                        if (fileProgressListener != null) {
+                            val i = fileProgressListener!!.first
+                            val i_progress = progress[i]
+                            val percent = 100 * i_progress / origFiles.fileSize(i)
+                            val currentFile = files!!.find { f -> f.indexInTorrent == i }
+                            if (currentFile != null) {
+                                val name = currentFile.filename
+                                Log.i(Tag, "Progress: $name - $percent%")
+                                fileProgressListener?.second?.invoke(i, percent.toInt())
+                            }
+                        }
+
+						lastProgressUpdate = System.currentTimeMillis()
 					}
 				}
 			}
@@ -156,7 +182,7 @@ class TorrentManager(private val context: Context) : AlertListener {
 		}).start()
 	}
 
-    fun setCurrentAlbum(album: Album, listener: (List<String>) -> Unit, errorListener: (Int) -> Unit) {
+    fun setCurrentAlbum(album: Album, listener: (List<Pair<String, Int>>) -> Unit, errorListener: (Int) -> Unit) {
         assert(onTorrentAddedListener == null)
         onTorrentAddedListener = listener
         this.errorListener = errorListener
@@ -183,7 +209,7 @@ class TorrentManager(private val context: Context) : AlertListener {
 		torrentTimeoutHandler.postDelayed(torrentTimeoutRunnable, 10000)
     }
 
-    fun requestSong(position: Int, listener: (File) -> Unit) {
+    fun requestSong(position: Int, listener: (File) -> Unit, progressListener: (Int, Int) -> Unit) {
         val fileInfo = files?.get(position)
         val handle = sessionManager.find(currentHash)
         if (fileInfo!!.completed) {
@@ -193,6 +219,7 @@ class TorrentManager(private val context: Context) : AlertListener {
         }
 
         onFileCompletedListener = Pair(fileInfo.indexInTorrent, listener)
+		fileProgressListener = Pair(fileInfo.indexInTorrent, progressListener)
 
         handle.setFilePriority(fileInfo.indexInTorrent, Priority.NORMAL)
         Log.i(Tag, "Starting to download " + fileInfo.path.name)
