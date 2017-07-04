@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'com.github.ben-manes.versions'
+apply plugin: "kotlin-kapt"
 
 android {
     compileSdkVersion 25
@@ -10,8 +11,8 @@ android {
         applicationId "com.github.funkyg.funkytunes"
         minSdkVersion 17
         targetSdkVersion 25
-        versionCode 5
-        versionName "0.1.4"
+        versionCode 6
+        versionName "0.2.0"
     }
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
