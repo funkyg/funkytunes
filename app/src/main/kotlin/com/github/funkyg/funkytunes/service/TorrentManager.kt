@@ -1,7 +1,14 @@
 package com.github.funkyg.funkytunes.service
 
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.net.ConnectivityManager
 import android.os.Handler
+import android.support.v4.app.NotificationCompat
 import android.util.Log
 import com.frostwire.jlibtorrent.*
 import com.frostwire.jlibtorrent.alerts.AddTorrentAlert
@@ -12,6 +19,8 @@ import com.frostwire.jlibtorrent.alerts.FileCompletedAlert
 import com.github.funkyg.funkytunes.Album
 import com.github.funkyg.funkytunes.FunkyApplication
 import com.github.funkyg.funkytunes.R
+import com.github.funkyg.funkytunes.activities.PlayingQueueActivity
+import com.github.funkyg.funkytunes.isVpnConnection
 import com.github.funkyg.funkytunes.network.PirateBayAdapter
 import com.github.funkyg.funkytunes.network.SearchResultCollector
 import com.github.funkyg.funkytunes.network.SkyTorrentsAdapter
@@ -25,6 +34,7 @@ class TorrentManager(private val context: Context) : AlertListener {
 
     private val Tag = "TorrentManager"
     private val MAGNET_TIMEOUT_SECONDS = 60
+    private val NOTIFICATION_ID = 471
 
     @Inject lateinit var pirateBayAdapter: PirateBayAdapter
     @Inject lateinit var skyTorrentsAdapter: SkyTorrentsAdapter
@@ -39,14 +49,38 @@ class TorrentManager(private val context: Context) : AlertListener {
 	private lateinit var torrentTimeoutHandler: Handler
 	private lateinit var torrentTimeoutRunnable: Runnable
 
+	private val networkChangeListener = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent?) {
+            if (!isVpnConnection(context)) {
+                sessionManager.pause()
+                val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                val contentIntent = PendingIntent.getActivity(context, 0,
+                        Intent(context, PlayingQueueActivity::class.java), PendingIntent.FLAG_CANCEL_CURRENT)
+                val notification = NotificationCompat.Builder(context)
+                        .setContentTitle(context.getString(R.string.notification_vpn_disabled_title))
+                        .setContentText(context.getString(R.string.notification_vpn_disabled_text))
+                        .setSmallIcon(R.drawable.ic_notification)
+                        .setContentIntent(contentIntent)
+                        .build()
+                nm.notify(NOTIFICATION_ID, notification)
+            } else {
+                sessionManager.resume()
+            }
+        }
+    }
+
     init {
         (context.applicationContext as FunkyApplication).component.inject(this)
         sessionManager.start()
         sessionManager.addListener(this)
+        context.registerReceiver(networkChangeListener, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
 
-        // Disable all seeding. We should handle this more intelligently, eg seed only on wifi,
-        // and/or add a setting.
-        sessionManager.maxActiveSeeds(0)
+        // disable upload
+        sessionManager.uploadRateLimit(1)
+
+        if (!isVpnConnection(context)) {
+            sessionManager.pause()
+        }
     }
 
     fun stop() {
@@ -55,6 +89,7 @@ class TorrentManager(private val context: Context) : AlertListener {
 
     fun destroy() {
         sessionManager.stop()
+        context.unregisterReceiver(networkChangeListener)
     }
 
     override fun types() = intArrayOf(AlertType.ADD_TORRENT.swig(), AlertType.FILE_COMPLETED.swig(), AlertType.BLOCK_FINISHED.swig())
@@ -159,9 +194,7 @@ class TorrentManager(private val context: Context) : AlertListener {
 
 	fun startTorrent(torrentInfo: TorrentInfo) {
 		Thread({ ->
-			if (torrentInfo != null) {
 				sessionManager.download(torrentInfo, context.filesDir)
-			}
 		}).start()
 	}
 

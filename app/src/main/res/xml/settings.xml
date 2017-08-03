@@ -2,7 +2,16 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
-        android:title="About Funkytunes">
+        android:title="@string/preference_category_general">
+
+        <SwitchPreference
+            android:key="@string/download_only_vpn"
+            android:title="@string/download_only_vpn" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/preference_category_about_funkytunes">
 
         <Preference
             android:title="@string/github_repository_title"
