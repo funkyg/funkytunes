@@ -11,8 +11,8 @@ android {
         applicationId "com.github.funkyg.funkytunes"
         minSdkVersion 17
         targetSdkVersion 25
-        versionCode 6
-        versionName "0.2.0"
+        versionCode 7
+        versionName "0.2.1"
     }
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
