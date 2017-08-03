@@ -183,8 +183,9 @@ class SkyTorrentsAdapter(context: Context) {
         val DETAILS_END = "\" title=\""
         val NAME = "\">"
         val NAME_END = "</a>"
-        val TORRENT_LINK = "<a href=\""
-        val TORRENT_LINK_END = "\" rel=\"nofollow\""
+        // SkyTorrent.in does not serve .torrent files anymore (as of 2017-08-03)
+        // val TORRENT_LINK = "<a href=\""
+        // val TORRENT_LINK_END = "\" rel=\"nofollow\""
         val MAGNET_LINK = "<a href=\""
         val MAGNET_LINK_END = "\" rel=\"nofollow\""
         val SIZE = "<td class=\"is-hidden-touch\" >"
@@ -208,12 +209,14 @@ class SkyTorrentsAdapter(context: Context) {
         val nameStart = htmlItem.indexOf(NAME, detailsStart) + NAME.length
         val name = htmlItem.substring(nameStart, htmlItem.indexOf(NAME_END, nameStart))
 
-        // Torrent link is first
-        val torrentLinkStart = htmlItem.indexOf(TORRENT_LINK, nameStart) + TORRENT_LINK.length
-        val torrentLink = prefixDetails + htmlItem.substring(torrentLinkStart, htmlItem.indexOf(TORRENT_LINK_END, torrentLinkStart))
+        // SkyTorrent.in does not serve .torrent files anymore (as of 2017-08-03)
+        // // Torrent link is first
+        // val torrentLinkStart = htmlItem.indexOf(TORRENT_LINK, nameStart) + TORRENT_LINK.length
+        // val torrentLink = prefixDetails + htmlItem.substring(torrentLinkStart, htmlItem.indexOf(TORRENT_LINK_END, torrentLinkStart))
+        val torrentLink = """"""
 
         // Magnet link is second
-        val magnetLinkStart = htmlItem.indexOf(MAGNET_LINK, torrentLinkStart) + MAGNET_LINK.length
+        val magnetLinkStart = htmlItem.indexOf(MAGNET_LINK, nameStart) + MAGNET_LINK.length
         val magnetLink = htmlItem.substring(magnetLinkStart, htmlItem.indexOf(MAGNET_LINK_END, magnetLinkStart))
 
         val sizeStart = htmlItem.indexOf(SIZE, magnetLinkStart) + SIZE.length
